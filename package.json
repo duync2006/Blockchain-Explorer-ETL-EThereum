@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "axios": "^1.6.2",
+    "commander": "^11.1.0",
+    "csv-parser": "^3.0.0",
+    "csvtojson": "^2.0.10",
+    "dotenv": "^16.3.1",
+    "mongodb": "^6.3.0",
+    "mongoimport": "^1.0.6",
+    "mongoose": "^8.0.1",
+    "multer": "^1.4.5-lts.1",
+    "web3": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "scripts": {
+    "dev": "nodemon index.js"
+  }
+}

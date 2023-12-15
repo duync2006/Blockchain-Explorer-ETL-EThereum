@@ -1,0 +1,2 @@
+transaction_hash,transaction_index,block_hash,block_number,cumulative_gas_used,gas_used,contract_address,root,status,effective_gas_price,l1_fee,l1_gas_used,l1_gas_price,l1_fee_scalar
+0x4740dd6881caf571722e95c7e55bf33fd1681eabd66f42880f42a9d3368227d2,0,0x07c4ec833aea65128e842dc8c0d14214d9834cd4326ce17f376f1249607f8061,40645024,239481850,239481850,,,1,1500000000,,,,
