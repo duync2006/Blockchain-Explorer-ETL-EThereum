@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model blocks {
+  timestamp         DateTime? @db.Timestamp(6)
+  number            BigInt?   @unique(map: "blocks_number_uindex", sort: Desc)
+  hash              String    @id(map: "blocks_pk") @db.VarChar(66)
+  parent_hash       String?   @db.VarChar(66)
+  nonce             String?   @db.VarChar(42)
+  sha3_uncles       String?   @db.VarChar(66)
+  logs_bloom        String?
+  transactions_root String?   @db.VarChar(66)
+  state_root        String?   @db.VarChar(66)
+  receipts_root     String?   @db.VarChar(66)
+  miner             String?   @db.VarChar(42)
+  difficulty        Decimal?  @db.Decimal(38, 0)
+  total_difficulty  Decimal?  @db.Decimal(38, 0)
+  size              BigInt?
+  extra_data        String?
+  gas_limit         BigInt?
+  gas_used          BigInt?
+  transaction_count BigInt?
+  base_fee_per_gas  BigInt?
+
+  @@index([timestamp(sort: Desc)], map: "blocks_timestamp_index")
+}
+
+model contracts {
+  address            String    @id(map: "contracts_pk") @db.VarChar(42)
+  bytecode           String?
+  function_sighashes String[]
+  is_erc20           Boolean?
+  is_erc721          Boolean?
+  block_number       BigInt?
+  block_hash         String?   @db.VarChar(66)
+  block_timestamp    DateTime? @db.Timestamp(6)
+
+  @@index([address(sort: Desc)], map: "contracts_address_index")
+}
+
+model logs {
+  log_index         BigInt
+  transaction_hash  String    @db.VarChar(66)
+  transaction_index BigInt?
+  address           String?   @db.VarChar(42)
+  data              String?
+  topic0            String?   @db.VarChar(66)
+  topic1            String?   @db.VarChar(66)
+  topic2            String?   @db.VarChar(66)
+  topic3            String?   @db.VarChar(66)
+  block_timestamp   DateTime? @db.Timestamp(6)
+  block_number      BigInt?
+  block_hash        String?   @db.VarChar(66)
+  decode            Json?     @db.Json
+
+  @@id([transaction_hash, log_index], map: "logs_pk")
+  @@index([address(sort: Desc)], map: "logs_address_index")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model test {
+  Value String? @db.Char(1)
+
+  @@ignore
+}
+
+model token_transfers {
+  token_address    String?   @db.VarChar(42)
+  from_address     String?   @db.VarChar(42)
+  to_address       String?   @db.VarChar(42)
+  value            Decimal?  @db.Decimal(78, 0)
+  transaction_hash String    @db.VarChar(66)
+  log_index        BigInt
+  block_timestamp  DateTime? @db.Timestamp(6)
+  block_number     BigInt?
+  block_hash       String?   @db.VarChar(66)
+
+  @@id([transaction_hash, log_index], map: "token_transfers_pk")
+  @@index([block_timestamp(sort: Desc)], map: "token_transfers_block_timestamp_index")
+  @@index([from_address, block_timestamp(sort: Desc)], map: "token_transfers_from_address_block_timestamp_index")
+  @@index([to_address, block_timestamp(sort: Desc)], map: "token_transfers_to_address_block_timestamp_index")
+  @@index([token_address, block_timestamp(sort: Desc)], map: "token_transfers_token_address_block_timestamp_index")
+}
+
+model tokens {
+  address         String    @id(map: "tokens_pk") @db.VarChar(42)
+  name            String?
+  symbol          String?
+  decimals        Int?
+  total_supply    Decimal?  @db.Decimal(78, 0)
+  block_number    BigInt?
+  block_hash      String?   @db.VarChar(66)
+  block_timestamp DateTime? @db.Timestamp(6)
+
+  @@index([address(sort: Desc)], map: "tokens_address_index")
+}
+
+model traces {
+  transaction_hash  String?   @db.VarChar(66)
+  transaction_index BigInt?
+  from_address      String?   @db.VarChar(42)
+  to_address        String?   @db.VarChar(42)
+  value             Decimal?  @db.Decimal(38, 0)
+  input             String?
+  output            String?
+  trace_type        String?   @db.VarChar(16)
+  call_type         String?   @db.VarChar(16)
+  reward_type       String?   @db.VarChar(16)
+  gas               BigInt?
+  gas_used          BigInt?
+  subtraces         BigInt?
+  trace_address     String?   @db.VarChar(8192)
+  error             String?
+  status            Int?
+  block_timestamp   DateTime? @db.Timestamp(6)
+  block_number      BigInt?
+  block_hash        String?   @db.VarChar(66)
+  trace_id          String    @id(map: "traces_pk")
+
+  @@index([block_timestamp(sort: Desc)], map: "traces_block_timestamp_index")
+  @@index([from_address, block_timestamp(sort: Desc)], map: "traces_from_address_block_timestamp_index")
+  @@index([to_address, block_timestamp(sort: Desc)], map: "traces_to_address_block_timestamp_index")
+}
+
+model transactions {
+  hash                        String    @id(map: "transactions_pk") @db.VarChar(66)
+  nonce                       BigInt?
+  transaction_index           BigInt?
+  from_address                String?   @db.VarChar(42)
+  to_address                  String?   @db.VarChar(42)
+  value                       Decimal?  @db.Decimal(38, 0)
+  gas                         BigInt?
+  gas_price                   BigInt?
+  input                       String?
+  receipt_cumulative_gas_used BigInt?
+  receipt_gas_used            BigInt?
+  receipt_contract_address    String?   @db.VarChar(42)
+  receipt_root                String?   @db.VarChar(66)
+  receipt_status              BigInt?
+  block_timestamp             DateTime? @db.Timestamp(6)
+  block_number                BigInt?
+  block_hash                  String?   @db.VarChar(66)
+  max_fee_per_gas             BigInt?
+  max_priority_fee_per_gas    BigInt?
+  transaction_type            BigInt?
+  receipt_effective_gas_price BigInt?
+  receipt_l1_fee              BigInt?
+  receipt_l1_gas_used         BigInt?
+  receipt_l1_gas_price        BigInt?
+  receipt_l1_fee_scalar       Decimal?  @db.Decimal
+  decodeInput                 Json?     @db.Json
+
+  @@index([block_timestamp(sort: Desc)], map: "transactions_block_timestamp_index")
+  @@index([from_address, block_timestamp(sort: Desc)], map: "transactions_from_address_block_timestamp_index")
+  @@index([to_address, block_timestamp(sort: Desc)], map: "transactions_to_address_block_timestamp_index")
+}
+
+model abis {
+  contract_address String @id(map: "contract_address") @db.Char(42)
+  abi              Json?  @db.Json
+}
+
+model event_signatures {
+  topic_0    String  @id @unique(map: "event_signatures_pk_topic_0") @db.VarChar(66)
+  event_name String?
+  inputs     Json?   @db.Json
+}
+
+model function_signature {
+  selector  String @db.VarChar(10)
+  func_name String
+  inputs    Json?  @db.Json
+
+  @@id([selector, func_name])
+}
