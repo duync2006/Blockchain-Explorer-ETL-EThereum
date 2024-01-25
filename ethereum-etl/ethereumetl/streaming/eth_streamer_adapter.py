@@ -33,7 +33,8 @@ class EthStreamerAdapter:
             item_exporter=ConsoleItemExporter(),
             batch_size=100,
             max_workers=5,
-            entity_types=tuple(EntityType.ALL_FOR_STREAMING)):
+            entity_types=tuple(EntityType.ALL_FOR_STREAMING),
+            node_type=None):
         self.batch_web3_provider = batch_web3_provider
         self.item_exporter = item_exporter
         self.batch_size = batch_size
@@ -41,6 +42,7 @@ class EthStreamerAdapter:
         self.entity_types = entity_types
         self.item_id_calculator = EthItemIdCalculator()
         self.item_timestamp_calculator = EthItemTimestampCalculator()
+        self.node_type = node_type
     def open(self):
         self.item_exporter.open()
 
@@ -212,32 +214,36 @@ class EthStreamerAdapter:
         return token_transfers
 
     def _export_traces(self, start_block, end_block):
-        exporter = InMemoryItemExporter(item_types=['trace'])
-        job = ExportTracesJob(
-            start_block=start_block,
-            end_block=end_block,
-            batch_size=self.batch_size,
-            web3=ThreadLocalProxy(lambda: build_web3(self.batch_web3_provider)),
-            max_workers=self.max_workers,
-            item_exporter=exporter
-        )
-        job.run()
-        # Change the key-name here
-        traces = exporter.get_items('trace')
-
-        # exporter = InMemoryItemExporter(item_types=['geth_trace'])
-        # #  geth trace
-        # job = ExportGethTracesJob(
-        #     start_block=start_block,
-        #     end_block=end_block,
-        #     batch_size=self.batch_size,
-        #     batch_web3_provider=self.batch_web3_provider,
-        #     max_workers=self.max_workers,
-        #     item_exporter=exporter
-        # )
-        # job.run()
-        # # Change the key-name here
-        # traces = exporter.get_items('geth_trace')
+        if self.node_type == 'PARITY':
+            exporter = InMemoryItemExporter(item_types=['trace'])
+            job = ExportTracesJob(
+                start_block=start_block,
+                end_block=end_block,
+                batch_size=self.batch_size,
+                web3=ThreadLocalProxy(lambda: build_web3(self.batch_web3_provider)),
+                max_workers=self.max_workers,
+                item_exporter=exporter
+            )
+            job.run()
+            
+            # Change the key-name here
+            traces = exporter.get_items('trace')
+        elif self.node_type == 'GETH': 
+            exporter = InMemoryItemExporter(item_types=['geth_trace'])
+            #  geth trace
+            job = ExportGethTracesJob(
+                start_block=start_block,
+                end_block=end_block,
+                batch_size=self.batch_size,
+                batch_web3_provider=self.batch_web3_provider,
+                max_workers=self.max_workers,
+                item_exporter=exporter
+            )
+            job.run()
+            # Change the key-name here
+            traces = exporter.get_items('geth_trace')
+        else: 
+            raise Exception("Sorry, cannot identify node type is PARITY or GETH")
         
         return traces
 

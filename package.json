@@ -6,6 +6,7 @@
     "csv-parser": "^3.0.0",
     "csvtojson": "^2.0.10",
     "dotenv": "^16.3.1",
+    "heroku": "^8.7.1",
     "mongodb": "^6.3.0",
     "mongoimport": "^1.0.6",
     "mongoose": "^8.0.1",

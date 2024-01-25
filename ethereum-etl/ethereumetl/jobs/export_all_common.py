@@ -42,6 +42,7 @@ from ethereumetl.jobs.exporters.tokens_item_exporter import tokens_item_exporter
 from ethereumetl.providers.auto import get_provider_from_uri
 from ethereumetl.thread_local_proxy import ThreadLocalProxy
 from ethereumetl.web3_utils import build_web3
+from urllib.parse import urlparse
 
 logger = logging.getLogger('export_all')
 # import time
@@ -312,15 +313,27 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
                         ListFieldItemConverter('topics', 'topic', fill=4)])
         
         from ethereumetl.streaming.eth_streamer_adapter import EthStreamerAdapter
-        
+                
+        node_type = get_type_provider_uri(provider_uri)
+
         Exporter = EthStreamerAdapter(
             batch_web3_provider=ThreadLocalProxy(lambda: get_provider_from_uri(provider_uri, batch=True)),
             item_exporter=item_exporter_to_Postgres,
             batch_size=batch_size,
             max_workers=max_workers,
+            node_type=node_type
         )
 
         Exporter.export_all(batch_start_block, batch_end_block)
         # ends = time()
         # print("Time Execute: ",  (ends-starts) * 10**3, "ms")
-        
+
+def get_type_provider_uri(uri_string):
+    uri = urlparse(uri_string)
+    infura = 'infura'
+    result = infura in uri.netloc
+    if result: 
+        # return PARITY type
+        return 'PARITY'
+    else: 
+        return 'GETH'
