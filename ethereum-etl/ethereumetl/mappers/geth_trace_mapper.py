@@ -56,21 +56,25 @@ class EthGethTraceMapper(object):
 
     def extract_transaction_traces(self, obj, block_number): 
         result = []
+        print('obj: ', obj)
         if 'calls' in obj: 
             for call in obj['calls']:
                 result.extend(self.extract_transaction_traces(call, block_number))
         if 'output' not in obj: 
             obj['output'] = '0x0'
-        geth_trace = EthGethTrace()
-        geth_trace.block_number = block_number
-        geth_trace.from_address = obj['from']
-        geth_trace.to_address = obj['to']
-        geth_trace.gas = obj['gas']
-        geth_trace.gasUsed = obj['gasUsed']
-        geth_trace.input = obj['input']
-        geth_trace.output = obj['output']
-        geth_trace.call_type = obj['type']
-        geth_trace.trace_type = obj['type']
+        try:
+            geth_trace = EthGethTrace()
+            geth_trace.block_number = block_number
+            geth_trace.from_address = obj['from']
+            geth_trace.to_address = obj['to']
+            geth_trace.gas = obj['gas']
+            geth_trace.gasUsed = obj['gasUsed']
+            geth_trace.input = obj['input']
+            geth_trace.output = obj['output']
+            geth_trace.call_type = obj['type']
+            geth_trace.trace_type = obj['type']
 
-        result.append(geth_trace)
+            result.append(geth_trace)
+        except: 
+            raise Exception(obj)
         return result

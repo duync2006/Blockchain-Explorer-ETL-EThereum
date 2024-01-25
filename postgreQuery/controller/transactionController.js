@@ -103,7 +103,19 @@ const TransactionController = {
       })
       res.status(200).send(toObject(transactions))
     } catch (err) {
+      console.log(err)
       res.status(500).send(err)
+    }
+  },
+
+  getTotalNumberTrans: async(req, res) => {
+    try {
+      const transWithCount = await prisma.transactions.count()
+      console.log(transWithCount)
+      res.status(200).send({ totalTransactions: transWithCount })
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error)
     }
   },
 }

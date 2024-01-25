@@ -57,6 +57,16 @@ const BlockController = {
     } catch (err) {
       res.status(500).send(err)
     }
+  },
+  getTotalBlocks: async(req, res) => {
+    try {
+      const blocksWithCount = await prisma.blocks.count()
+      console.log(blocksWithCount)
+      res.status(200).send({ totalBlocks: blocksWithCount })
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error)
+    }
   }
 }
 

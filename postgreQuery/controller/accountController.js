@@ -181,10 +181,12 @@ const AccountController = {
               address: tokenTransfer.token_address
             }
           })
-          if(token.decimals == null) {
-            tokenTransfer.token = token
-            tokenTransfersERC721.push(tokenTransfer)
-          }
+          if (token != null) {
+            if(token.decimals == null) {
+              tokenTransfer.token = token
+              tokenTransfersERC721.push(tokenTransfer)
+            }
+          } 
       }
       res.status(200).send(toObject(tokenTransfersERC721))
     } catch (err) {
