@@ -11,7 +11,7 @@ const BlockRoute = require('./router/BlockRoute')
 const ContractRoute = require('./router/ContractRoute')
 const LogRoute = require('./router/LogRoute')
 const AccountRoute = require('./router/AccountRoute')
-
+const DeleteRoute = require('./router/DeleteRoute')
 app.use(bodyParser.json())
 app.use(
   bodyParser.urlencoded({
@@ -31,6 +31,7 @@ app.use("/contracts", ContractRoute)
 app.use("/abi", AbiRoute)
 app.use("/logs", LogRoute)
 app.use("/account", AccountRoute)
+app.use("/delete", DeleteRoute)
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)

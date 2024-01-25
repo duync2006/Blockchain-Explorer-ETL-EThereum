@@ -27,7 +27,7 @@ const getTransactionHash = async(request, response) => {
     }
   })
   result.logs = logs
-
+  
   response.status(200).json(result)
 }
 
