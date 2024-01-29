@@ -175,7 +175,7 @@ const AccountController = {
 
     try {
       const address = req.params.address.toLowerCase()
-      const tokenTransfersERC721 = []
+      const tokenTransfersERC20 = []
       const tokenTransfers = await prisma.token_transfers.findMany({
         where: {
           OR: [
@@ -197,11 +197,11 @@ const AccountController = {
           if (token != null) {
             if(token.decimals != null) {
               tokenTransfer.token = token
-              tokenTransfersERC721.push(tokenTransfer)
+              tokenTransfersERC20.push(tokenTransfer)
             }
           }
       }
-      res.status(200).send(toObject(tokenTransfersERC721))
+      res.status(200).send(toObject(tokenTransfersERC20))
     } catch (err) {
       console.log(err)
       res.status(500).send(err.code)
@@ -298,16 +298,6 @@ const AccountController = {
         result.moreInfor = moreInfor
       } else {
         result.type = 'SCA'
-        // const creator = await prisma.contracts.findUnique({
-        //   where: {
-        //     address: address
-        //   }, 
-        //   select: {
-        //     creator: true
-        //   }
-        // })
-        // moreInfor.creator = creator.creator
-
         const creator = await prisma.transactions.findFirst({
           where: {
             receipt_contract_address: address
@@ -360,7 +350,7 @@ const AccountController = {
         let contract = new web3.eth.Contract(minABI, token);
         try {
           balance = await contract.methods.balanceOf(address).call();
-          // console.log("balance: ", balance)
+  
           item = {}
           item.token_address = token
           try {
@@ -385,7 +375,7 @@ const AccountController = {
           }
           result.overview.tokens_list.push(item)
         } catch (err) {
-          // console.log(err)
+
           item = {}
           item.token_address = token
           item.balance = null
@@ -396,18 +386,18 @@ const AccountController = {
       .then(()=>{
         res.status(200).send(toObject(result))
       })
-      // res.status(500).send(toObject(result))
     } catch (error) {
       console.log(error)
       res.status(500).send(error)
     }
   }, 
+
   getAccountERC20Overview: async(req, res) => {
     try {
       const address = req.params.address.toLowerCase()
       const addressToCheckSum = await web3.utils.toChecksumAddress(address)
       const contract = new web3.eth.Contract(minABI, addressToCheckSum)
-      const holders = await prisma.token_transfers.findMany({
+      const stakeHolders = await prisma.token_transfers.findMany({
         where: {
           token_address: address
         }, 
@@ -418,7 +408,7 @@ const AccountController = {
       })
       const uniqueAddressesSet = new Set();
 
-      holders.forEach(transaction => {
+      stakeHolders.forEach(transaction => {
         uniqueAddressesSet.add(transaction.from_address)
         uniqueAddressesSet.add(transaction.to_address)
       })
@@ -426,29 +416,35 @@ const AccountController = {
       const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
       
       let totalNumberHolder = 0;
+      let holders = []
       for (let holder of uniqueAddressesArray) {
         balance = await contract.methods.balanceOf(holder).call()
-        if(balance > 0) totalNumberHolder += 1;
-        // console.log(balance )
+        if (holder == '0x0000000000000000000000000000000000000000') {
+          continue;
+        }
+        if(balance > 0) {
+          totalNumberHolder += 1;
+          newHolder = {}
+          newHolder.address = holder
+          newHolder.quantity = balance
+          holders.push(newHolder)
+        } 
       }
-      
-      console.log(contract)
       const totalSupply = await contract.methods.totalSupply().call()
       
 
       res.status(200).send({
         totalSupply: totalSupply,
         totalNumberHolder: totalNumberHolder,
-        holdersAddress: uniqueAddressesArray,
+        holdersAddress: holders,
       })
 
     } catch (error) {
-      console.log(error)
       res.status(500).send(error)
     }
   },
 
-  getERC20TokenTransfers_SCA: async(req, res) => {
+  getERCTokenTransfers_SCA: async(req, res) => {
     try {
       address = req.params.address.toLowerCase()
       tokenTransfers = await prisma.token_transfers.findMany({
@@ -458,7 +454,6 @@ const AccountController = {
       })
       res.status(200).send(toObject(tokenTransfers))
     } catch (error) {
-      console.log(error)
       res.status(500).send(error)
     }
   },
