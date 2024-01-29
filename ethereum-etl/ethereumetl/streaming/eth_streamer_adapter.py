@@ -97,7 +97,7 @@ class EthStreamerAdapter:
         # Export contracts
         contracts = []
         if self._should_export(EntityType.CONTRACT):
-            contracts = self._export_contracts(traces)
+            contracts = self._export_contracts(traces, self.node_type)
 
         # Export tokens
         tokens = []

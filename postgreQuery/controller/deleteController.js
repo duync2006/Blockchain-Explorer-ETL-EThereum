@@ -73,6 +73,13 @@ const DeleteController = {
     } catch (error) {
       res.status(500).send('Delete all Failed')
     }
+  }, 
+  deleteGethTraces: async(req, res) => {
+    try {
+       
+    } catch (error) {
+      
+    }
   }
 }
 

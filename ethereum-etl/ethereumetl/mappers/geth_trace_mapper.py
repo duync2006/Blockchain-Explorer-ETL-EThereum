@@ -51,12 +51,13 @@ class EthGethTraceMapper(object):
             'input': geth_trace.input,
             'output': geth_trace.output,
             'call_type': geth_trace.call_type,
-            'trace_type':geth_trace.trace_type
+            'trace_type':geth_trace.trace_type,
+            'trace_id': geth_trace.trace_index
         }
 
     def extract_transaction_traces(self, obj, block_number): 
         result = []
-        print('obj: ', obj)
+        # print("obj: ", obj['to'])
         if 'calls' in obj: 
             for call in obj['calls']:
                 result.extend(self.extract_transaction_traces(call, block_number))
@@ -76,5 +77,5 @@ class EthGethTraceMapper(object):
 
             result.append(geth_trace)
         except: 
-            raise Exception(obj)
+            pass
         return result

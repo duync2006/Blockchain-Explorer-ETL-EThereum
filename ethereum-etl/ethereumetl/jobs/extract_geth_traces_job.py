@@ -52,9 +52,17 @@ class ExtractGethTracesJob(BaseJob):
         for geth_trace_dict in geth_traces:
             geth_trace = self.geth_trace_mapper.json_dict_to_geth_trace(geth_trace_dict)
             traces = self.trace_mapper.geth_trace_to_traces(geth_trace)
+            # calculate_trace_indexes(traces)
+            # print("traces: ". traces)
+            # sasdasd
             for trace in traces:
                 self.item_exporter.export_item(self.trace_mapper.trace_to_dict(trace))
               
     def _end(self):
         self.batch_work_executor.shutdown()
         self.item_exporter.close()
+
+def calculate_trace_indexes(traces):
+    # Only works if traces were originally ordered correctly which is the case for Parity traces
+    for ind, trace in enumerate(traces):
+        trace.trace_index = ind

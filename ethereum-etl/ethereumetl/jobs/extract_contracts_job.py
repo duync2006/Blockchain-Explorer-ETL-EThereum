@@ -37,7 +37,8 @@ class ExtractContractsJob(BaseJob):
             traces_iterable,
             batch_size,
             max_workers,
-            item_exporter):
+            item_exporter,
+            node_type):
         self.traces_iterable = traces_iterable
 
         self.batch_work_executor = BatchWorkExecutor(batch_size, max_workers)
@@ -45,6 +46,7 @@ class ExtractContractsJob(BaseJob):
 
         self.contract_service = EthContractService()
         self.contract_mapper = EthContractMapper()
+        self.node_type = node_type
 
     def _start(self):
         self.item_exporter.open()
@@ -58,20 +60,22 @@ class ExtractContractsJob(BaseJob):
             trace['block_number'] = to_int_or_none(trace.get('block_number'))
         
         # GETH_TRACE
-        # contract_creation_traces = [trace for trace in traces
-        #                             if ((trace.get('trace_type') == 'create' or trace.get('trace_type') == 'CREATE') and trace.get('to_address')) is not None
-        #                             and len(trace.get('to_address')) > 0]
+        if(self.node_type == 'GETH'):
+            contract_creation_traces = [trace for trace in traces
+                                    if ( trace.get('trace_type') == 'CREATE' and trace.get('to_address') is not None
+                                    and len(trace.get('to_address')) > 0)]
         
         # PARITY_TRACE
-        contract_creation_traces = [trace for trace in traces
+        elif(self.node_type == 'PARITY'):
+            contract_creation_traces = [trace for trace in traces
                                     if trace.get('trace_type') == 'create' and trace.get('to_address') is not None
                                     and len(trace.get('to_address')) > 0 and trace.get('status') == 1]
         
-        # print("contract_create_traces", contract_creation_traces)
         contracts = []
         for trace in contract_creation_traces:
             contract = EthContract()
             contract.address = trace.get('to_address')
+            contract.creator = trace.get('from_address')
             bytecode = trace.get('output')
             contract.bytecode = bytecode
             contract.block_number = trace.get('block_number')

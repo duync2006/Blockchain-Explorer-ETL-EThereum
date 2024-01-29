@@ -10,5 +10,12 @@ router.get("/NFTTokenTransfers/:address", accountController.getTokenTransferNFT)
 
 router.get("/identify/:address", accountController.identify)
 
+router.get("/overview/:address", accountController.getAccountOverview)
+
+router.get("/overview/ERC20/:address", accountController.getAccountERC20Overview)
+
+router.get("/overview/ERC721/:address", accountController.getAccountERC721Overview)
+
+router.get("/SCA/tokenTransfer/:address", accountController.getERC20TokenTransfers_SCA)
 
 module.exports = router;

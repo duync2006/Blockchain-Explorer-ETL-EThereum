@@ -33,4 +33,5 @@ class EthGethTrace(object):
         self.call_type = None
         self.gas = None
         self.gas_used = None
+        self.trace_index = None
 

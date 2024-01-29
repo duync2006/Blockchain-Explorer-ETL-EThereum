@@ -194,7 +194,8 @@ def enrich_contracts(blocks, contracts):
             'function_sighashes',
             'is_erc20',
             'is_erc721',
-            'block_number'
+            'block_number',
+            'creator'
         ],
         [
             ('timestamp', 'block_timestamp'),

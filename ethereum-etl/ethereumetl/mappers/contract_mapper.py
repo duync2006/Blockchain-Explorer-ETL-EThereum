@@ -41,5 +41,6 @@ class EthContractMapper(object):
             'function_sighashes': contract.function_sighashes,
             'is_erc20': contract.is_erc20,
             'is_erc721': contract.is_erc721,
-            'block_number': contract.block_number
+            'block_number': contract.block_number,
+            'creator': contract.creator
         }

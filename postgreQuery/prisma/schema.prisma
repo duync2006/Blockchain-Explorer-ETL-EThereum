@@ -40,6 +40,7 @@ model contracts {
   block_number       BigInt?
   block_hash         String?   @db.VarChar(66)
   block_timestamp    DateTime? @db.Timestamp(6)
+  creator            String?   @db.VarChar(42)
 
   @@index([address(sort: Desc)], map: "contracts_address_index")
 }
@@ -178,4 +179,21 @@ model function_signature {
   inputs    Json?  @db.Json
 
   @@id([selector, func_name])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model geth_traces {
+  from_address    String?   @db.VarChar(42)
+  to_address      String?   @db.VarChar(42)
+  value           Decimal?  @db.Decimal(38, 0)
+  input           String?
+  output          String?
+  trace_type      String?   @db.VarChar(16)
+  call_type       String?   @db.VarChar(16)
+  gas             BigInt?
+  gas_used        BigInt?
+  block_timestamp DateTime? @db.Timestamp(6)
+  block_number    BigInt?
+
+  @@ignore
 }

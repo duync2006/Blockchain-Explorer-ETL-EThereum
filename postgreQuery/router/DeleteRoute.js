@@ -16,5 +16,7 @@ router.delete('/tokens', DeleteController.deleteTokens)
 
 router.delete('/tokenTransfers', DeleteController.deleteTokenTransfers)
 
+router.delete('/geth_traces', DeleteController.deleteGethTraces)
+
 router.delete('/all', DeleteController.deleteAll)
 module.exports = router;

@@ -73,6 +73,9 @@ class ExportGethTracesJob(BaseJob):
                 'block_number': block_number,
                 'transaction_traces': [tx_trace.get('result') for tx_trace in result],
             })
+            
+            calculate_trace_indexes(geth_traces)
+
             for trace in geth_traces:
                 self.item_exporter.export_item(self.geth_trace_mapper.geth_trace_to_dict(trace))
         except: 
@@ -80,3 +83,8 @@ class ExportGethTracesJob(BaseJob):
     def _end(self):
         self.batch_work_executor.shutdown()
         self.item_exporter.close()
+
+def calculate_trace_indexes(traces):
+    # Only works if traces were originally ordered correctly which is the case for Parity traces
+    for ind, trace in enumerate(traces):
+        trace.trace_index = ind
