@@ -8,7 +8,8 @@ router.get('/:address', ContractController.getContract)
 
 router.post('/addContractName', ContractController.setContractName);
 
-router.delete("/", ContractController.deleteAll);
+router.get('/bytecode/:address', ContractController.getByteCode)
 
+router.delete("/", ContractController.deleteAll);
 
 module.exports = router

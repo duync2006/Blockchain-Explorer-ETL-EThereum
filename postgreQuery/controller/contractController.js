@@ -58,6 +58,24 @@ const ContractController = {
       res.status(500).send(err)
     }
   }, 
+
+  getByteCode: async(req, res) => {
+    try {
+      address = req.params.address.toLowerCase()
+      contract_bytecode = await prisma.contracts.findUnique({
+        where: {
+          address: address
+        }, 
+        select: {
+          address: true,
+          bytecode: true
+        }
+      })
+      res.status(200).send(contract_bytecode)
+    } catch (error) {
+      res.status(500).send(error)
+    }
+  }
 }
 
 module.exports = ContractController;

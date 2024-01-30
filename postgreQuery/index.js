@@ -12,6 +12,44 @@ const ContractRoute = require('./router/ContractRoute')
 const LogRoute = require('./router/LogRoute')
 const AccountRoute = require('./router/AccountRoute')
 const DeleteRoute = require('./router/DeleteRoute')
+
+const web3 = require('./web3')
+
+var WebSocketServer = require('ws').Server
+
+const wss = new WebSocketServer({ port: 8080 });
+wss.on('connection', async function(ws) {
+    // console.log("helloworld")
+    var subscription = web3.eth.subscribe('pendingTransactions',function(error, result){
+      if (!error)
+      console.log(result);
+    })
+    .on("data", async function(transaction){
+      console.log(transaction)
+      // res.status(200).send(await )
+      // ws.send(await web3.eth.getTransaction(transaction));
+      let pendingData = await web3.eth.getTransaction(transaction)
+      ws.send(JSON.stringify(pendingData))
+    });
+
+    ws.on('message', async function(message) {
+      messageData = JSON.parse(message)
+      console.log('received: %s', messageData);
+      console.log(messageData.hash)
+      if (messageData.hash) {
+        subscription.unsubscribe(function(error, success){
+          if(success)
+              console.log('Successfully unsubscribed!');
+        });
+        ws.send(JSON.stringify(await web3.eth.getTransaction(messageData.hash)))
+      }
+      
+  });
+})
+
+
+
+
 app.use(bodyParser.json())
 app.use(
   bodyParser.urlencoded({

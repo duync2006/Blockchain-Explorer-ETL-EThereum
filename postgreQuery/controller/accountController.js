@@ -26,7 +26,6 @@ let minABI = [{
   },
   // balanceOf
   {
-    
 		"inputs": [
 			{
 				"internalType": "address",
@@ -440,6 +439,7 @@ const AccountController = {
       })
 
     } catch (error) {
+      console.log(error)
       res.status(500).send(error)
     }
   },
@@ -460,8 +460,55 @@ const AccountController = {
 
   getAccountERC721Overview: async(req, res) => {
     try {
+      const address = req.params.address.toLowerCase()
+      const addressToCheckSum = await web3.utils.toChecksumAddress(address)
+      const contract = new web3.eth.Contract(minABI, addressToCheckSum)
+      const stakeHolders = await prisma.token_transfers.findMany({
+        where: {
+          token_address: address
+        }, 
+        select: {
+          from_address: true,
+          to_address: true, 
+        }
+      })
+      const uniqueAddressesSet = new Set();
+
+      stakeHolders.forEach(transaction => {
+        uniqueAddressesSet.add(transaction.from_address)
+        uniqueAddressesSet.add(transaction.to_address)
+      })
+
+      const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
       
+      console.log(uniqueAddressesArray)
+
+      let totalNumberHolder = 0;
+      let holders = []
+      for (let holder of uniqueAddressesArray) {
+        if (holder == '0x0000000000000000000000000000000000000000') {
+          continue;
+        }
+        balance = await contract.methods.balanceOf(holder).call()
+        if(balance > 0) {
+          totalNumberHolder += 1;
+          newHolder = {}
+          newHolder.address = holder
+          newHolder.quantity = balance
+          holders.push(newHolder)
+        } 
+      }
+      // const totalSupply = await contract.methods.totalSupply().call()
+      
+
+      res.status(200).send({
+        totalSupply: 0,
+        totalNumberHolder: totalNumberHolder,
+        holdersAddress: holders,
+      })
+
     } catch (error) {
+      console.log(error)
       res.status(500).send(error)
     }
   }
