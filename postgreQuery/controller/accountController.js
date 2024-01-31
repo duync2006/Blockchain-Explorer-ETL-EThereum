@@ -512,6 +512,37 @@ const AccountController = {
       console.log(error)
       res.status(500).send(error)
     }
+  }, 
+  getERC721_item: async(req, res) => {
+    try {
+      address = req.params.address.toLowerCase()
+      id = req.body.tokenId
+      result = {}
+      
+      const NFT = await prisma.tokens.findUnique({
+        where: {
+          address: address
+        }
+      })
+      
+      result.NTF_item = NFT,
+      result.tokenId = id
+
+      const tokenTransfers = await prisma.token_transfers.findMany({
+        where: { 
+          AND: {
+            token_address: address,
+            value: id
+          }
+        }
+      })
+
+      result.token_transfer = tokenTransfers
+      res.status(200).send(toObject(result))
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error)
+    }
   }
 }
 

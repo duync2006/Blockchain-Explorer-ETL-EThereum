@@ -30,14 +30,11 @@ const AbiController = {
     } else {
       eventObjects = abi.filter(obj => obj.type === 'event')
       functionObjects = abi.filter(obj => obj.type === 'function')
-      // console.log("eventObjects: ", eventObjects)
       try{
         for (let log of eventObjects) {
           topic0 = web3.eth.abi.encodeEventSignature(log);
           const existingAbi = await prisma.event_signatures.findUnique({where:{topic_0: topic0}})
           if (existingAbi) {
-            // console.log("existingAbi: ", existingAbi)
-            // console.log("log.input", log.inputs)
             existingAbi.inputs.push(log)
             // console.log(log.inputs)
             await prisma.event_signatures.update({
@@ -81,7 +78,6 @@ const AbiController = {
     response.status(200).send("success")
   }
 }
-  
 }
 
 module.exports = AbiController

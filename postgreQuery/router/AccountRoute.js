@@ -18,4 +18,8 @@ router.get("/overview/ERC721/:address", accountController.getAccountERC721Overvi
 
 router.get("/SCA/tokenTransfer/:address", accountController.getERCTokenTransfers_SCA)
 
+
+router.post("/overview/ERC721_item/:address", accountController.getERC721_item)
+
+
 module.exports = router;
