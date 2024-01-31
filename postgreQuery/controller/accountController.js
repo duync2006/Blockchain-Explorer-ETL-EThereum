@@ -417,6 +417,7 @@ const AccountController = {
       let totalNumberHolder = 0;
       let holders = []
       for (let holder of uniqueAddressesArray) {
+        console.log(contract)
         balance = await contract.methods.balanceOf(holder).call()
         if (holder == '0x0000000000000000000000000000000000000000') {
           continue;

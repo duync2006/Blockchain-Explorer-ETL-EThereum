@@ -27,6 +27,7 @@ from ethereumetl.json_rpc_requests import generate_trace_block_by_number_json_rp
 from blockchainetl.jobs.base_job import BaseJob
 from ethereumetl.mappers.geth_trace_mapper import EthGethTraceMapper
 from ethereumetl.utils import validate_range, rpc_response_to_result
+from ethereumetl.service.trace_id_calculator import calculate_geth_trace_ids
 
 
 # Exports geth traces
@@ -50,6 +51,7 @@ class ExportGethTracesJob(BaseJob):
 
         self.geth_trace_mapper = EthGethTraceMapper()
 
+
     def _start(self):
         self.item_exporter.open()
 
@@ -66,18 +68,19 @@ class ExportGethTracesJob(BaseJob):
 
         for response_item in response:
             block_number = response_item.get('id')
-        try:
             result = rpc_response_to_result(response_item)
 
             geth_traces = self.geth_trace_mapper.json_dict_to_geth_trace({
                 'block_number': block_number,
-                'transaction_traces': [tx_trace.get('result') for tx_trace in result],
+                'transaction_traces': [tx_trace.get('result') for tx_trace in result]
             })
+            # calculate_trace_indexes(geth_traces)
             
-            calculate_trace_indexes(geth_traces)
-
+        try:
+            calculate_geth_trace_ids(geth_traces)
             for trace in geth_traces:
                 self.item_exporter.export_item(self.geth_trace_mapper.geth_trace_to_dict(trace))
+                # print("geth_tract_to_dict: ", self.geth_trace_mapper.geth_trace_to_dict(trace))
         except: 
             pass
     def _end(self):
@@ -88,3 +91,4 @@ def calculate_trace_indexes(traces):
     # Only works if traces were originally ordered correctly which is the case for Parity traces
     for ind, trace in enumerate(traces):
         trace.trace_index = ind
+

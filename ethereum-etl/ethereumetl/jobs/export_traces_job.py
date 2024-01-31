@@ -73,6 +73,7 @@ class ExportTracesJob(BaseJob):
         )
 
     def _export_batch(self, block_number_batch):
+        
         # TODO: Change to len(block_number_batch) > 0 when this issue is fixed
         # https://github.com/paritytech/parity-ethereum/issues/9822
         assert len(block_number_batch) == 1
@@ -92,8 +93,6 @@ class ExportTracesJob(BaseJob):
         # https://github.com/paritytech/parity-ethereum/issues/9822
         json_traces = self.web3.parity.traceBlock(block_number)
         
-        # print("json_traces: ", json_traces)
-
         if json_traces is None:
             raise ValueError('Response from the node is None. Is the node fully synced? Is the node started with tracing enabled? Is trace_block API enabled?')
 

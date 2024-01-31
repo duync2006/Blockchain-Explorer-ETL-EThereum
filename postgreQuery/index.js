@@ -47,9 +47,6 @@ wss.on('connection', async function(ws) {
   });
 })
 
-
-
-
 app.use(bodyParser.json())
 app.use(
   bodyParser.urlencoded({
@@ -60,7 +57,6 @@ app.use(
 app.get('/', (request, response) => {
   response.json({ info: 'Node.js, Express, and Postgres API' })
 })
-
 
 app.use("/blocks", BlockRoute);
 app.use("/transactions", TransactionRoute)

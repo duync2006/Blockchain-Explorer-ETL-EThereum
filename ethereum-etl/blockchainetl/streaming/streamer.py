@@ -74,7 +74,7 @@ class Streamer:
     def _do_stream(self):
         while True and (self.end_block is None or self.last_synced_block < self.end_block):
             synced_blocks = 0
-
+            
             try:
                 synced_blocks = self._sync_cycle()
             except Exception as e:

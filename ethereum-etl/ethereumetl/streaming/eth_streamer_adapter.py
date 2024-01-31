@@ -129,9 +129,11 @@ class EthStreamerAdapter:
             sort_by(enriched_contracts, ('block_number',)) + \
             sort_by(enriched_tokens, ('block_number',))
 
+        
         self.calculate_item_ids(all_items)
         self.calculate_item_timestamps(all_items)
         # print("All item: ", all_items)
+        # sss
         self.item_exporter.export_items(all_items)
 
     def _export_blocks_and_transactions(self, start_block, end_block):
@@ -244,16 +246,18 @@ class EthStreamerAdapter:
             traces = exporter.get_items('geth_trace')
         else: 
             raise Exception("Sorry, cannot identify node type is PARITY or GETH")
-        
+        print("traces: ", traces)
+        # ssss
         return traces
 
-    def _export_contracts(self, traces):
+    def _export_contracts(self, traces, node_type):
         exporter = InMemoryItemExporter(item_types=['contract'])
         job = ExtractContractsJob(
             traces_iterable=traces,
             batch_size=self.batch_size,
             max_workers=self.max_workers,
-            item_exporter=exporter
+            item_exporter=exporter,
+            node_type=node_type
         )
         job.run()
         contracts = exporter.get_items('contract')

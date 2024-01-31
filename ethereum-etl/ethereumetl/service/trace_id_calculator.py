@@ -40,6 +40,20 @@ def calculate_trace_ids(traces):
     return traces
 
 
+def calculate_geth_trace_ids(traces):
+    # group by block
+    traces_grouped_by_block = defaultdict(list)
+    for trace in traces:
+        traces_grouped_by_block[trace.block_number].append(trace)
+
+    # calculate ids for each block number
+    for block_traces in traces_grouped_by_block.values():
+        block_scoped_traces = [trace for trace in block_traces]
+        calculate_block_scoped_trace_ids(block_scoped_traces)
+    return traces
+
+
+
 def calculate_transaction_scoped_trace_ids(traces):
     for trace in traces:
         trace.trace_id = concat(trace.trace_type, trace.transaction_hash, trace_address_to_str(trace.trace_address))
@@ -53,7 +67,15 @@ def calculate_block_scoped_trace_ids(traces):
 
     # calculate ids
     for type_traces in grouped_traces.values():
-        calculate_trace_indexes_for_single_type(type_traces)
+        calculate_geth_trace_indexes_for_single_type(type_traces)
+
+def calculate_geth_trace_indexes_for_single_type(traces):
+    sorted_traces = sorted(traces,
+                           key=lambda trace: (trace.from_address, trace.to_address, trace.value))
+
+    for index, trace in enumerate(sorted_traces):
+        trace.trace_id = concat(trace.trace_type, trace.block_number, index)
+
 
 
 def calculate_trace_indexes_for_single_type(traces):

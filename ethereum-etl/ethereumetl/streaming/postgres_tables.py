@@ -156,7 +156,7 @@ GETH_TRACES = Table(
     Column('block_timestamp', TIMESTAMP),
     Column('block_number', BigInteger),
     # Column('block_hash', String),
-    # Column('trace_id', String, primary_key=True),
+    Column('trace_id', String, primary_key=True),
 )
 
 TOKENS = Table(
@@ -179,5 +179,6 @@ CONTRACTS = Table(
     Column('is_erc20', Boolean),
     Column('is_erc721', Boolean),
     Column('block_number', BigInteger),
+    Column('creator', VARCHAR(42)),
     PrimaryKeyConstraint('address', name='contracts_pk'),
 )

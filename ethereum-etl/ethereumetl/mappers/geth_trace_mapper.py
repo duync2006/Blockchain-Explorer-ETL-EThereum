@@ -38,7 +38,7 @@ class EthGethTraceMapper(object):
         else:
             result = EthGethTrace()
         return result
-
+    
     def geth_trace_to_dict(self, geth_trace):
         return {
             'type': 'geth_trace',
@@ -47,12 +47,12 @@ class EthGethTraceMapper(object):
             'from_address': geth_trace.from_address,
             'to_address': geth_trace.to_address,
             'gas': geth_trace.gas,
-            'gasUsed': geth_trace.gasUsed,
+            'gas_used': geth_trace.gasUsed,
             'input': geth_trace.input,
             'output': geth_trace.output,
             'call_type': geth_trace.call_type,
             'trace_type':geth_trace.trace_type,
-            'trace_id': geth_trace.trace_index
+            'trace_id': geth_trace.trace_id
         }
 
     def extract_transaction_traces(self, obj, block_number): 

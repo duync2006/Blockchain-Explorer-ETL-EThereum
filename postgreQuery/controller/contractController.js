@@ -11,7 +11,7 @@ const ContractController = {
   getAll: async(req,res) => {
     try{
       const contracts = await prisma.contracts.findMany()
-      res.status(200).send(contracts)
+      res.status(200).send(toObject(contracts))
     } catch (err) {
       res.status(500).send(err)
     }

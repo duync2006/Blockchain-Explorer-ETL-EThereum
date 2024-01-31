@@ -26,25 +26,24 @@ from collections import defaultdict
 def calculate_trace_statuses(traces):
     # set default values
     for trace in traces:
-        if trace.error is not None and len(trace.error) > 0:
+        if trace.gas_used == 0 or trace.gas_used == None:
             trace.status = 0
         else:
             trace.status = 1
 
-    # group by transaction
-    grouped_transaction_traces = defaultdict(list)
-    for trace in traces:
-        if trace.transaction_hash is not None and len(trace.transaction_hash) > 0:
-            grouped_transaction_traces[trace.transaction_hash].append(trace)
+    # # group by blockNumber
+    # grouped_blockNumber_traces = defaultdict(list)
+    # for trace in traces:
+    #     if trace.block_number is not None:
+    #         grouped_blockNumber_traces[trace.block_number].append(trace)
 
-    # calculate statuses for each transaction
-    for transaction_traces in grouped_transaction_traces.values():
-        calculate_trace_statuses_for_single_transaction(transaction_traces)
+    # # calculate statuses for each transaction
+    # for blockNumber_traces in grouped_blockNumber_traces.values():
+    #     calculate_trace_statuses_for_single_blockNumber(blockNumber_traces)
 
     return traces
 
-
-def calculate_trace_statuses_for_single_transaction(all_traces):
+def calculate_trace_statuses_for_single_blockNumber(all_traces):
     """O(n * log(n))"""
     sorted_traces = sorted(all_traces, key=lambda trace: len(trace.trace_address or []))
     indexed_traces = {trace_address_to_str(trace.trace_address): trace for trace in sorted_traces}

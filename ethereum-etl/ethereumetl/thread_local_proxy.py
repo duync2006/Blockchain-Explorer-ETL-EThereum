@@ -28,7 +28,7 @@ class ThreadLocalProxy:
     def __init__(self, delegate_factory):
         self._thread_local = threading.local()
         self._delegate_factory = delegate_factory
-
+        
     def __getattr__(self, name):
         return getattr(self._get_thread_local_delegate(), name)
 

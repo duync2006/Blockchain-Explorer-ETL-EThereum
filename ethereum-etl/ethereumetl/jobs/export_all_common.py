@@ -291,7 +291,7 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
         #     block_range=block_range,
         #     time_diff=time_diff,
         # ))
-        
+
         from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
         from blockchainetl.streaming.postgres_utils import create_insert_statement_for_table
         from blockchainetl.jobs.exporters.converters.unix_timestamp_item_converter import UnixTimestampItemConverter
@@ -313,9 +313,9 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
                         ListFieldItemConverter('topics', 'topic', fill=4)])
         
         from ethereumetl.streaming.eth_streamer_adapter import EthStreamerAdapter
-                
+        
         node_type = get_type_provider_uri(provider_uri)
-
+        
         Exporter = EthStreamerAdapter(
             batch_web3_provider=ThreadLocalProxy(lambda: get_provider_from_uri(provider_uri, batch=True)),
             item_exporter=item_exporter_to_Postgres,
@@ -325,8 +325,6 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
         )
 
         Exporter.export_all(batch_start_block, batch_end_block)
-        # ends = time()
-        # print("Time Execute: ",  (ends-starts) * 10**3, "ms")
 
 def get_type_provider_uri(uri_string):
     uri = urlparse(uri_string)
