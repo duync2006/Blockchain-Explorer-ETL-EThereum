@@ -39,6 +39,25 @@ def generate_trace_block_by_number_json_rpc(block_numbers):
             request_id=block_number,
         )
 
+# debug_traceByTransactions
+def generate_geth_trace_by_transaction_hash_json_rpc(transactions): 
+    for tx in transactions:
+        yield generate_json_rpc(
+            method='debug_traceTransaction',
+            params=[tx['hash'],{'tracer': 'callTracer'}],
+            request_id=tx['hash'],
+        )
+
+# debug_traceBlock
+def generate_geth_trace_by_by_number_json_rpc(block_numbers): 
+    for block_number in block_numbers:
+        yield generate_json_rpc(
+            method='arbtrace_block',
+            params=['0x0E0C2C'],
+            # save block_number in request ID, so later we can identify block number in response
+            request_id=block_number,
+        )  
+
 
 def generate_get_receipt_json_rpc(transaction_hashes):
     for idx, transaction_hash in enumerate(transaction_hashes):

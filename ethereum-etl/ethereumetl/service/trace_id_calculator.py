@@ -42,17 +42,18 @@ def calculate_trace_ids(traces):
 
 def calculate_geth_trace_ids(traces):
     # group by block
-    traces_grouped_by_block = defaultdict(list)
+    traces_grouped_by_transaction = defaultdict(list)
     for trace in traces:
-        traces_grouped_by_block[trace.block_number].append(trace)
+        traces_grouped_by_transaction[trace.transaction_hash].append(trace)
 
     # calculate ids for each block number
-    for block_traces in traces_grouped_by_block.values():
-        block_scoped_traces = [trace for trace in block_traces]
-        calculate_block_scoped_trace_ids(block_scoped_traces)
+    for block_traces in traces_grouped_by_transaction.values(): 
+        transaction_scoped_traces = [trace for trace in block_traces if trace.transaction_hash]
+        calculate_transaction_scoped_trace_ids(transaction_scoped_traces)
+
+        # block_scoped_traces = [trace for trace in block_traces if not trace.transaction_hash]
+        # calculate_block_scoped_trace_ids(block_scoped_traces)
     return traces
-
-
 
 def calculate_transaction_scoped_trace_ids(traces):
     for trace in traces:

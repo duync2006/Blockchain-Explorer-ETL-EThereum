@@ -24,11 +24,12 @@ import json
 
 from ethereumetl.executors.batch_work_executor import BatchWorkExecutor
 from ethereumetl.json_rpc_requests import generate_trace_block_by_number_json_rpc
+from ethereumetl.json_rpc_requests import generate_geth_trace_by_transaction_hash_json_rpc
 from blockchainetl.jobs.base_job import BaseJob
 from ethereumetl.mappers.geth_trace_mapper import EthGethTraceMapper
 from ethereumetl.utils import validate_range, rpc_response_to_result
 from ethereumetl.service.trace_id_calculator import calculate_geth_trace_ids
-
+from ethereumetl.json_rpc_requests import generate_geth_trace_by_by_number_json_rpc
 
 # Exports geth traces
 class ExportGethTracesJob(BaseJob):
@@ -39,7 +40,8 @@ class ExportGethTracesJob(BaseJob):
             batch_size,
             batch_web3_provider,
             max_workers,
-            item_exporter):
+            item_exporter,
+            transactions):
         validate_range(start_block, end_block)
         self.start_block = start_block
         self.end_block = end_block
@@ -50,7 +52,7 @@ class ExportGethTracesJob(BaseJob):
         self.item_exporter = item_exporter
 
         self.geth_trace_mapper = EthGethTraceMapper()
-
+        self.transactions = transactions
 
     def _start(self):
         self.item_exporter.open()
@@ -66,23 +68,54 @@ class ExportGethTracesJob(BaseJob):
         trace_block_rpc = list(generate_trace_block_by_number_json_rpc(block_number_batch))
         response = self.batch_web3_provider.make_batch_request(json.dumps(trace_block_rpc))
 
-        for response_item in response:
-            block_number = response_item.get('id')
-            result = rpc_response_to_result(response_item)
+        # geth_trace_block_rpc = list(generate_geth_trace_by_by_number_json_rpc(block_number_batch))
+        # geth_response = self.batch_web3_provider.make_batch_request(json.dumps(geth_trace_block_rpc))
+        # print('RESPONSE: ', response)
+        # print('GETH RESPONSE: ', geth_response)
 
-            geth_traces = self.geth_trace_mapper.json_dict_to_geth_trace({
-                'block_number': block_number,
-                'transaction_traces': [tx_trace.get('result') for tx_trace in result]
-            })
-            # calculate_trace_indexes(geth_traces)
+        trace_transaction_rpc = list(generate_geth_trace_by_transaction_hash_json_rpc(self.transactions))
+        response_1 = self.batch_web3_provider.make_batch_request(json.dumps(trace_transaction_rpc))
+        # print('RPC: ', trace_transaction_rpc)
+        print("RESPONSE 1: ", json.dumps(response_1))
+        # print("RESPONSE: ", response)
+
+        # for response_item in response:
+        #     block_number = response_item.get('id')
+        #     result = rpc_response_to_result(response_item)
+
+        #     geth_traces = self.geth_trace_mapper.json_dict_to_geth_trace({
+        #         'block_number': block_number,
+        #         'transaction_traces': [tx_trace.get('result') for tx_trace in result]
+        #     })
+        # # calculate_trace_indexes(geth_traces)
+        #     try:
+                # calculate_geth_trace_ids(geth_traces)
+        #         for trace in geth_traces:
+        #             self.item_exporter.export_item(self.geth_trace_mapper.geth_trace_to_dict(trace))
+        #             # print("geth_tract_to_dict: ", self.geth_trace_mapper.geth_trace_to_dict(trace))
+        #     except: 
+        #         pass
+
+        for response_item in response_1:
+            if type(response_item) is str:
+                break 
+            txHash = response_item.get('id')
+            result = rpc_response_to_result(response_item)
+            traceArray = flattenTraceCalls(response_item)
+            print("TRACE ARRAY: ", traceArray)
+            geth_traces = self.geth_trace_mapper.array_to_EthGethTrace(traceArray, txHash, traceArray[-1]['result']['type'])
+            print("geth_traces: ", geth_traces)
+            calculate_trace_indexes(geth_traces)
+            try: 
+                calculate_geth_trace_ids(geth_traces)
+                for trace in geth_traces:
+                    # print("geth_tract_to_dict: ", self.geth_trace_mapper.geth_trace_to_dict(trace))
+                    self.item_exporter.export_item(self.geth_trace_mapper.geth_trace_to_dict(trace))
+            except Exception as error: 
+                print(error)
             
-        try:
-            calculate_geth_trace_ids(geth_traces)
-            for trace in geth_traces:
-                self.item_exporter.export_item(self.geth_trace_mapper.geth_trace_to_dict(trace))
-                # print("geth_tract_to_dict: ", self.geth_trace_mapper.geth_trace_to_dict(trace))
-        except: 
-            pass
+
+
     def _end(self):
         self.batch_work_executor.shutdown()
         self.item_exporter.close()
@@ -92,3 +125,42 @@ def calculate_trace_indexes(traces):
     for ind, trace in enumerate(traces):
         trace.trace_index = ind
 
+def getTraceIndex(index): 
+    address = []
+    if index >= 1000:
+        address.extend(getTraceIndex(int(index/1000)))
+    address.append(index % 1000)
+    return (address)
+    
+       
+def getTraceAddress(traceResult, index = 1, isChild = False):
+    internalTnxs = []
+    if 'calls' in traceResult:
+        # print(len(traceResult['calls']))
+        if len(traceResult['calls']) >= 1 and isChild == True: 
+            index = index*1000
+        for trace_call in range (len(traceResult['calls'])):
+            traceAddress = getTraceIndex(index)
+            traceResult['calls'][trace_call]['traceAddress'] = traceAddress
+            internalTnxs.extend(getTraceAddress(traceResult['calls'][trace_call], index, True))
+            if 'calls' in traceResult['calls'][trace_call]:
+                tmp = traceResult['calls'][trace_call].copy()
+                tmp.pop('calls', None)
+                internalTnxs.extend([tmp])
+            else:
+                internalTnxs.extend([traceResult['calls'][trace_call]])
+            index = index + 1;
+    return internalTnxs
+        
+# print(getTraceAddress(trace['result']))
+
+def flattenTraceCalls(traceDict):
+    txHash = traceDict['id']
+    traceArray = []
+    traceArray.extend(getTraceAddress(traceDict['result']))
+    firstTrace = traceDict.copy()
+    if 'calls' in traceDict['result']:
+        firstTrace['result'].pop('calls', None)
+        firstTrace['traceAddress'] = [0]
+    traceArray.extend([firstTrace])
+    return traceArray

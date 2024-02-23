@@ -42,7 +42,7 @@ class EthGethTraceMapper(object):
     def geth_trace_to_dict(self, geth_trace):
         return {
             'type': 'geth_trace',
-            'block_number': geth_trace.block_number,
+            # 'block_number': geth_trace.block_number,
             'transaction_traces': geth_trace.transaction_traces,
             'from_address': geth_trace.from_address,
             'to_address': geth_trace.to_address,
@@ -52,7 +52,9 @@ class EthGethTraceMapper(object):
             'output': geth_trace.output,
             'call_type': geth_trace.call_type,
             'trace_type':geth_trace.trace_type,
-            'trace_id': geth_trace.trace_id
+            'trace_id': geth_trace.trace_id,
+            'trace_address': geth_trace.trace_address,
+            'transaction_hash': geth_trace.transaction_hash,
         }
 
     def extract_transaction_traces(self, obj, block_number): 
@@ -78,4 +80,29 @@ class EthGethTraceMapper(object):
             result.append(geth_trace)
         except: 
             pass
+        return result
+    
+
+    def array_to_EthGethTrace(self, traceArray, txHash, trace_type):
+        result = []
+        try:
+            for trace in traceArray: 
+                # print('trace in trace Array: ', trace)
+                geth_trace = EthGethTrace()
+                # geth_trace.block_number = None
+                geth_trace.from_address = trace['from']
+                geth_trace.to_address = trace['to']
+                geth_trace.gas = trace['gas']
+                geth_trace.gasUsed = trace['gasUsed']
+                geth_trace.input = trace['input']
+                if 'output' in trace:
+                    geth_trace.output = trace['output']
+                geth_trace.call_type = trace['type']
+                geth_trace.trace_type = trace_type
+                geth_trace.trace_address = trace['traceAddress']
+                geth_trace.transaction_hash = txHash
+                
+                result.append(geth_trace)
+        except Exception as error: 
+            print("error: ", error)    
         return result

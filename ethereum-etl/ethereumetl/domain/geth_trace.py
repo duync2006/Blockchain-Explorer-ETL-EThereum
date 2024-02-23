@@ -23,15 +23,17 @@
 
 class EthGethTrace(object):
     def __init__(self):
-        self.block_number = None
-        self.transaction_traces = None
+        # self.block_number = None
+        self.transaction_traces = None    
         self.from_address = None 
         self.to_address = None
         self.value = None
         self.input = None
+        self.output = None
         self.trace_type = None
         self.call_type = None
         self.gas = None
         self.gas_used = None
-        self.trace_index = None
+        self.trace_address = None
+        self.transaction_hash = None
 

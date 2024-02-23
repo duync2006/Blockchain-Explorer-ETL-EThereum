@@ -32,15 +32,12 @@ class EthContractService:
             evm_code = EvmCode(contract=Contract(bytecode=bytecode), static_analysis=False, dynamic_analysis=False)
             evm_code.disassemble(bytecode)
             basic_blocks = evm_code.basicblocks
-            # print(basic_blocks)
-            # asd
+            
             if basic_blocks and len(basic_blocks) > 0:
                 init_block = basic_blocks[0]
                 # Solve Bug Here
+                # https://github.com/blockchain-etl/ethereum-etl/issues/349
                 instructions = [inst for block in basic_blocks for inst in block.instructions]
-                # for ins in instructions: 
-                #     print(ins)
-                # ssss
                 push4_instructions = [inst for inst in instructions if inst.name == 'PUSH4']
                 return sorted(list(set('0x' + inst.operand for inst in push4_instructions)))
             else:

@@ -7,6 +7,7 @@ class EntityType:
     TRACE = 'trace'
     CONTRACT = 'contract'
     TOKEN = 'token'
+    GETH_TRACE = 'geth_trace'
 
     ALL_FOR_STREAMING = [BLOCK, TRANSACTION, LOG, TOKEN_TRANSFER, TRACE, CONTRACT, TOKEN]
     ALL_FOR_INFURA = [BLOCK, TRANSACTION, LOG, TOKEN_TRANSFER]

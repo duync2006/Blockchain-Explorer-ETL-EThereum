@@ -29,7 +29,6 @@ from ethereumetl.utils import hex_to_dec, to_normalized_address
 class EthTraceMapper(object):
     def json_dict_to_trace(self, json_dict):
         trace = EthTrace()
-
         trace.block_number = json_dict.get('blockNumber')
         trace.transaction_hash = json_dict.get('transactionHash')
         trace.transaction_index = json_dict.get('transactionPosition')
@@ -80,7 +79,6 @@ class EthTraceMapper(object):
     def geth_trace_to_traces(self, geth_trace):
         block_number = geth_trace.block_number
         transaction_traces = geth_trace.transaction_traces
-
         traces = []
 
         for tx_index, tx_trace in enumerate(transaction_traces):

@@ -92,8 +92,7 @@ class EthStreamerAdapter:
         # Export traces
         traces = []
         if self._should_export(EntityType.TRACE):
-            traces = self._export_traces(start_block, end_block)
-
+            traces = self._export_traces(start_block, end_block, transactions)
         # Export contracts
         contracts = []
         if self._should_export(EntityType.CONTRACT):
@@ -112,7 +111,7 @@ class EthStreamerAdapter:
             if EntityType.LOG in self.entity_types else []
         enriched_token_transfers = enrich_token_transfers(blocks, token_transfers) \
             if EntityType.TOKEN_TRANSFER in self.entity_types else []
-        enriched_traces = enrich_traces(blocks, traces) \
+        enriched_traces = enrich_traces(transactions, traces) \
             if EntityType.TRACE in self.entity_types else []
         enriched_contracts = enrich_contracts(blocks, contracts) \
             if EntityType.CONTRACT in self.entity_types else []
@@ -128,12 +127,9 @@ class EthStreamerAdapter:
             sort_by(enriched_traces, ('block_number', 'trace_index')) + \
             sort_by(enriched_contracts, ('block_number',)) + \
             sort_by(enriched_tokens, ('block_number',))
-
-        
+    
         self.calculate_item_ids(all_items)
         self.calculate_item_timestamps(all_items)
-        # print("All item: ", all_items)
-        # sss
         self.item_exporter.export_items(all_items)
 
     def _export_blocks_and_transactions(self, start_block, end_block):
@@ -215,7 +211,7 @@ class EthStreamerAdapter:
         token_transfers = exporter.get_items('token_transfer')
         return token_transfers
 
-    def _export_traces(self, start_block, end_block):
+    def _export_traces(self, start_block, end_block, transactions = []):
         if self.node_type == 'PARITY':
             exporter = InMemoryItemExporter(item_types=['trace'])
             job = ExportTracesJob(
@@ -233,21 +229,21 @@ class EthStreamerAdapter:
         elif self.node_type == 'GETH': 
             exporter = InMemoryItemExporter(item_types=['geth_trace'])
             #  geth trace
+
             job = ExportGethTracesJob(
                 start_block=start_block,
                 end_block=end_block,
                 batch_size=self.batch_size,
                 batch_web3_provider=self.batch_web3_provider,
                 max_workers=self.max_workers,
-                item_exporter=exporter
+                item_exporter=exporter,
+                transactions=transactions
             )
             job.run()
             # Change the key-name here
             traces = exporter.get_items('geth_trace')
         else: 
             raise Exception("Sorry, cannot identify node type is PARITY or GETH")
-        print("traces: ", traces)
-        # ssss
         return traces
 
     def _export_contracts(self, traces, node_type):

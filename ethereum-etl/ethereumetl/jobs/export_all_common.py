@@ -114,19 +114,6 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
     #         transactions_file=transactions_file,
     #     ))
         
-    #     # from blockchainetl.jobs.exporters.in_memory_item_exporter import InMemoryItemExporter
-    #     # blocks_and_transactions_item_exporter = InMemoryItemExporter(item_types=['block', 'transaction'])
-    #     job = ExportBlocksJob(
-    #         start_block=batch_start_block,
-    #         end_block=batch_end_block,
-    #         batch_size=batch_size,
-    #         batch_web3_provider=ThreadLocalProxy(lambda: get_provider_from_uri(provider_uri, batch=True)),
-    #         max_workers=max_workers,
-    #         item_exporter=blocks_and_transactions_item_exporter(blocks_file, transactions_file),
-    #         # item_exporter=blocks_and_transactions_item_exporter,
-    #         export_blocks=blocks_file is not None,
-    #         export_transactions=transactions_file is not None)
-    #     job.run()   
     #     # # # token_transfers # # #
 
     #     token_transfers_file = None

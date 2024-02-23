@@ -69,9 +69,29 @@ def stream(last_synced_block_file, lag, provider_uri, output, start_block, entit
 
     node_type = get_type_provider_uri(provider_uri)
 
+    from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
+    from blockchainetl.streaming.postgres_utils import create_insert_statement_for_table
+    from blockchainetl.jobs.exporters.converters.unix_timestamp_item_converter import UnixTimestampItemConverter
+    from blockchainetl.jobs.exporters.converters.int_to_decimal_item_converter import IntToDecimalItemConverter
+    from blockchainetl.jobs.exporters.converters.list_field_item_converter import ListFieldItemConverter
+    from ethereumetl.streaming.postgres_tables import GETH_TRACES, BLOCKS, TRANSACTIONS, LOGS, TOKEN_TRANSFERS, TRACES, TOKENS, CONTRACTS
+    item_exporter_to_Postgres = PostgresItemExporter(
+            'postgresql+pg8000://postgres:billboss123@localhost:5432/ETL_Ethereum', item_type_to_insert_stmt_mapping={
+                'block': create_insert_statement_for_table(BLOCKS),
+                'transaction': create_insert_statement_for_table(TRANSACTIONS),
+                'log': create_insert_statement_for_table(LOGS),
+                'token_transfer': create_insert_statement_for_table(TOKEN_TRANSFERS),
+                'trace': create_insert_statement_for_table(TRACES),
+                'geth_trace': create_insert_statement_for_table(GETH_TRACES),
+                'token': create_insert_statement_for_table(TOKENS),
+                'contract': create_insert_statement_for_table(CONTRACTS),
+            },
+        converters=[UnixTimestampItemConverter(), IntToDecimalItemConverter(),
+                        ListFieldItemConverter('topics', 'topic', fill=4)])
+
     streamer_adapter = EthStreamerAdapter(
         batch_web3_provider=ThreadLocalProxy(lambda: get_provider_from_uri(provider_uri, batch=True)),
-        item_exporter=create_item_exporters(output),
+        item_exporter=item_exporter_to_Postgres,
         batch_size=batch_size,
         max_workers=max_workers,
         entity_types=entity_types,

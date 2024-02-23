@@ -137,7 +137,7 @@ TRACES = Table(
 
 GETH_TRACES = Table(
     'geth_traces', metadata,
-    # Column('transaction_hash', String),
+    Column('transaction_hash', String),
     # Column('transaction_index', BigInteger),
     Column('from_address', String),
     Column('to_address', String),
@@ -150,7 +150,7 @@ GETH_TRACES = Table(
     Column('gas', BigInteger),
     Column('gas_used', BigInteger),
     # Column('subtraces', BigInteger),
-    # Column('trace_address', String),
+    Column('trace_address', String),
     # Column('error', String),
     # Column('status', Integer),
     Column('block_timestamp', TIMESTAMP),
