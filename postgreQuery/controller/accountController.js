@@ -413,6 +413,7 @@ const AccountController = {
       })
 
       const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
+      const totalSupply = await contract.methods.totalSupply().call()
       
       let totalNumberHolder = 0;
       let holders = []
@@ -427,10 +428,10 @@ const AccountController = {
           newHolder = {}
           newHolder.address = holder
           newHolder.quantity = balance
+          newHolder.percentage = balance / totalSupply
           holders.push(newHolder)
         } 
       }
-      const totalSupply = await contract.methods.totalSupply().call()
       
 
       res.status(200).send({

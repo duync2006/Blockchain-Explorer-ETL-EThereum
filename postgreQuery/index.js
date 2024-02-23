@@ -12,7 +12,7 @@ const ContractRoute = require('./router/ContractRoute')
 const LogRoute = require('./router/LogRoute')
 const AccountRoute = require('./router/AccountRoute')
 const DeleteRoute = require('./router/DeleteRoute')
-
+const StatisticRoute = require('./router/StatisticRoute')
 const web3 = require('./web3')
 
 var WebSocketServer = require('ws').Server
@@ -66,6 +66,7 @@ app.use("/abi", AbiRoute)
 app.use("/logs", LogRoute)
 app.use("/account", AccountRoute)
 app.use("/delete", DeleteRoute)
+app.use("/statistic",StatisticRoute )
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
