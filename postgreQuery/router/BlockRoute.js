@@ -10,6 +10,8 @@ router.get("/lastest", BlockController.getLatestBlocks)
 
 router.get("/total", BlockController.getTotalBlocks)
 
+router.get("/", BlockController.getAllBlocks)
+
 router.delete("/", BlockController.deleteAll)
 
 module.exports = router

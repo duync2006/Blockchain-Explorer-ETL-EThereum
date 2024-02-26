@@ -12,4 +12,6 @@ router.get("/address/:address", TransactionController.getTransactionsByAddress);
 
 router.get("/total", TransactionController.getTotalNumberTrans);
 
+router.get("/", TransactionController.getAllTransaction);
+
 module.exports = router;

@@ -118,6 +118,24 @@ const TransactionController = {
       res.status(500).send(error)
     }
   },
+
+  getAllTransaction: async(req, res) => {
+    try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
+      const trans = await prisma.transactions.findMany({
+        orderBy: { block_number : 'desc'},
+        skip: (page - 1) * perPage,
+        take: perPage
+      })
+
+      res.status(200).send(toObject(trans))
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error)
+    }
+  }
 }
 
 module.exports = TransactionController

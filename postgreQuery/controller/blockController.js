@@ -67,6 +67,26 @@ const BlockController = {
       console.log(error)
       res.status(500).send(error)
     }
+  }, 
+  getAllBlocks: async(req, res) => {
+    try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
+      const blocks = await prisma.blocks.findMany({
+        orderBy: { number : 'desc'},
+        skip: (page - 1) * perPage,
+        take: perPage
+      })
+
+      // const blocks = await prisma.blocks.findMany()
+
+
+      res.status(200).json(toObject(blocks))
+    } catch (error) {
+      
+      res.status(500).send(err)
+    }
   }
 }
 
