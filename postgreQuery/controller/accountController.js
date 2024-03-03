@@ -65,22 +65,24 @@ const AccountController = {
     try {
       const address = req.params.address.toLowerCase()
       const address_to_check_sum = await web3.utils.toChecksumAddress(req.params.address)
-      // console.log(address)
+      const ETH_balancePromise = web3.eth.getBalance(address_to_check_sum)
+      const total_transactionPromise = web3.eth.getTransactionCount(address_to_check_sum)
+      const bytecodePromise = web3.eth.getCode(address)
+      const [ETH_balance, total_transaction, bytecode] = await Promise.all([ETH_balancePromise, total_transactionPromise, bytecodePromise]) 
       let result = {};
-      bytecode = await web3.eth.getCode(address)
-      console.log('bytecode:', bytecode.length)
+      result.ETH_balance = ETH_balance
+      result.total_transaction = total_transaction
+      
+      // console.log('bytecode:', bytecode.length)
       if(bytecode == '0x' && bytecode.length == 2) {
         result.type = 'EOA'
-        console.log("hello")
       } else {
         result.type = 'SCA'
       }
-      console.log("result: ", result)
-      const ETH_balance = await web3.eth.getBalance(address_to_check_sum)
-      const total_transaction = await web3.eth.getTransactionCount(address_to_check_sum)
+      
       let moreInfor = {}
       if (result.type = 'EOA') {
-        const last_txn_sent = await prisma.transactions.findFirst({
+        const last_txn_sent_Promise = prisma.transactions.findFirst({
           where: {
             from_address: address
           }, 
@@ -91,7 +93,7 @@ const AccountController = {
             hash: true
           }
         })
-        const first_txn_sent = await prisma.transactions.findFirst({
+        const first_txn_sent_Promise = prisma.transactions.findFirst({
           where: {
             from_address: address
           }, 
@@ -102,6 +104,7 @@ const AccountController = {
             hash: true
           }
         })
+        const [last_txn_sent, first_txn_sent ] = await Promise.all([first_txn_sent_Promise, first_txn_sent_Promise])
         moreInfor.last_txn_sent = last_txn_sent
         moreInfor.first_txn_sent = first_txn_sent
       }
@@ -128,41 +131,41 @@ const AccountController = {
       // console.log(uniqueTokenAddressSet)
       const uniqueTokenAddressArray = Array.from(uniqueTokenAddressSet);
       result.token_holding = uniqueTokenAddressArray.length
-      result.ETH_balance = ETH_balance
-      result.total_transaction = total_transaction
       result.tokens_list = []
 
-      for (let token of uniqueTokenAddressArray) {
-        let item = {}
-        item.token_address = token 
-        const tokenExisting = await prisma.tokens.findUnique({
-          where: {
-            address: token
-          }
-        })
+      // for (let token of uniqueTokenAddressArray) {
+      const tokenPromises = uniqueTokenAddressArray.map(async(token) => { 
+      let item = {}
+      item.token_address = token 
+      const tokenExisting = await prisma.tokens.findUnique({
+        where: {
+          address: token
+        }
+      })
+      item.tokenDetail = tokenExisting
+      if(tokenExisting){
         item.tokenDetail = tokenExisting
-        if(tokenExisting){
-          item.tokenDetail = tokenExisting
-          if(tokenExisting.decimals == null) {
-            item.type = 'ERC721'
-          } else {
-            item.type = 'ERC20'
-          }
+        if(tokenExisting.decimals == null) {
+          item.type = 'ERC721'
         } else {
-          item.type = null
+          item.type = 'ERC20'
         }
-        let contract = await new web3.eth.Contract(minABI, token);
-        let balance = null;
-        try {
-          console.log("token: ", token)
-          balance = await contract.methods.balanceOf(address_to_check_sum).call();         
-        } catch (error) {
-          console.log("Balance Error")
-        }
-        item.balance = balance  
-        result.tokens_list.push(item)
+      } else {
+        item.type = null
       }
+      let contract = await new web3.eth.Contract(minABI, token);
+      let balance = null;
+      try {
 
+        balance = await contract.methods.balanceOf(address_to_check_sum).call();         
+      } catch (error) {
+
+      }
+      item.balance = balance  
+      result.tokens_list.push(item)
+    // }
+    })
+      const tokenPromiseAll = await Promise.all(tokenPromises);
       res.status(200).send(toObject(result))
 
     } catch (err) {

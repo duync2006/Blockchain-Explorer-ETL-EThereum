@@ -1,18 +1,16 @@
 const { exec, spawn } = require('child_process');
-
+const Web3 = require("web3");
 
 const ExtractController = {
   extractManual: async(request, response) => {
     startBlock = request.body.startBlockNumber;
     endBlock = request.body.endBlockNumber;
     provider = request.body.provider;
-    // exec(`ethereumetl export_all -s ${startBlock} -e ${endBlock} -o output.txt -p ${provider}`, (err, stdout, stderr) => {
-    //   if(err) {
-    //     console.log(err)
-    //     response.status(500).send(err)
-    //   }
-    // })
-    // response.status(200).send("Extract Success")
+    if (startBlock == undefined || endBlock == undefined) {
+      const web3 = new Web3(provider)
+      startBlock = await web3.eth.getBlockNumber()
+      endBlock = startBlock
+    }
     const command = 'ethereumetl'
     const args = ['export_all', '-s', startBlock, '-e', endBlock, '-o', 'output.txt', '-p', provider]
 
@@ -43,25 +41,16 @@ const ExtractController = {
     try {
       startBlock = request.body.startBlockNumber
       provider = request.body.provider
+      if (startBlock == undefined) {
+        const web3 = new Web3(provider)
+        startBlock = await web3.eth.getBlockNumber()
+      }
       database = process.env.DATABASE_URL_FOR_EXTRACT
-      //   this.childProcess = await exec(`ethereumetl stream --start-block ${startBlock} \
-      //   --provider-uri ${provider} \
-      //   --output ${database}`, (err, stdout, stderr) => {
-      //     if(err) {
-      //       console.log(err)
-      //       response.status(500).send(err)
-      //     }
-      //     console.log(stdout)
-      //     console.log(stderr)
-      // })
       const command = 'ethereumetl'
       const args = ['stream', '-s', startBlock, '-o', database, '-p', provider]
 
       const ethereumetlProcessAutomate = spawn(command, args)
 
-      // spawn(`ethereumetl stream --start-block ${startBlock} \
-      //    --provider-uri ${provider} \
-      //    --output ${database}`, { shell: true })
       ethereumetlProcessAutomate.stdout.on('data', (data) => {
         console.log(`stdout: ${data}`);
       })

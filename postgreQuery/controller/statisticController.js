@@ -51,8 +51,7 @@ const StatisticController = {
       
       // Lấy giá trị của tham số truy vấn từ phần thân của yêu cầu
       const filterOption = req.query.options;
-      
-      console.log(req.query)
+
       let startDate;
   
       if (filterOption === '1') {
@@ -80,7 +79,7 @@ const StatisticController = {
       
       const transactionCountByDay = {};
 
-      transactions.forEach((transaction) => {
+      const promise = transactions.forEach((transaction) => {
         const date = transaction.block_timestamp.toISOString().split('T')[0];
         if (transactionCountByDay[date]) {
           transactionCountByDay[date]++;
@@ -88,7 +87,7 @@ const StatisticController = {
           transactionCountByDay[date] = 1;
         }
       });
-
+      await Promise.all([promise])
       return res.json({ "transactionStatistics": transactionCountByDay });
     } catch (error) {
       console.error('Error fetching transactions:', error);

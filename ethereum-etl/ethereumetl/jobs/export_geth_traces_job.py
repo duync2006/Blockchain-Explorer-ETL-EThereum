@@ -76,7 +76,7 @@ class ExportGethTracesJob(BaseJob):
         trace_transaction_rpc = list(generate_geth_trace_by_transaction_hash_json_rpc(self.transactions))
         response_1 = self.batch_web3_provider.make_batch_request(json.dumps(trace_transaction_rpc))
         # print('RPC: ', trace_transaction_rpc)
-        print("RESPONSE 1: ", json.dumps(response_1))
+        # print("RESPONSE 1: ", json.dumps(response_1))
         # print("RESPONSE: ", response)
 
         # for response_item in response:

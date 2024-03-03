@@ -73,11 +73,9 @@ class EthStreamerAdapter:
                                 functionDecoder = FunctionInputDecoder(myContract)
                                 result = functionDecoder.decode_function_input(transaction["input"])
                                 result["method"] = function_signature[0]["func_name"]
-                                # print("result: ", result)
                                 transaction["decodeInput"] = result
                 except:
                     pass
-                    # print(error)
                 
         # Export receipts and logs
         receipts, logs = [], []
@@ -147,7 +145,6 @@ class EthStreamerAdapter:
         blocks_and_transactions_job.run()
         blocks = blocks_and_transactions_item_exporter.get_items('block')
         transactions = blocks_and_transactions_item_exporter.get_items('transaction')
-        # print("transaction: ", transactions)
         
         return blocks, transactions
 
@@ -171,7 +168,6 @@ class EthStreamerAdapter:
             #  2. tx_hash receipt.transaction_hash PASS
             #  3. receipt
             #  4. logs =  myContract.events.Transfer().processReceipt(receipt)
-       
         
         for log in logs: 
             try: 
@@ -223,7 +219,6 @@ class EthStreamerAdapter:
                 item_exporter=exporter
             )
             job.run()
-            
             # Change the key-name here
             traces = exporter.get_items('trace')
         elif self.node_type == 'GETH': 
@@ -240,13 +235,15 @@ class EthStreamerAdapter:
                 transactions=transactions
             )
             job.run()
-            # Change the key-name here
+            
             traces = exporter.get_items('geth_trace')
+            
         else: 
             raise Exception("Sorry, cannot identify node type is PARITY or GETH")
         return traces
 
     def _export_contracts(self, traces, node_type):
+        
         exporter = InMemoryItemExporter(item_types=['contract'])
         job = ExtractContractsJob(
             traces_iterable=traces,
