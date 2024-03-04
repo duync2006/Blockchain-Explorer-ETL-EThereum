@@ -1,3 +1,4 @@
+const { start } = require('postgresql');
 const prisma = require('../config')
 const web3 = require('../web3')
 
@@ -51,7 +52,26 @@ let minABI = [{
     "name":"decimals",
     "outputs":[{"name":"","type":"uint8"}],
     "type":"function"
-  }
+  },
+  {
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "ownerOf",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
 ];
 
 async function getBalance(address) {
@@ -59,10 +79,18 @@ async function getBalance(address) {
   return balance;
 }
 
+function paginateArray(array, page, perpage) {
+  const startIndex = (page - 1)*perpage;
+  const endIndex = startIndex + perpage;
+  return array.slice(startIndex, endIndex);
+}
 
 const AccountController = {
   getAsset: async(req, res) => {
     try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
       const address = req.params.address.toLowerCase()
       const address_to_check_sum = await web3.utils.toChecksumAddress(req.params.address)
       const ETH_balancePromise = web3.eth.getBalance(address_to_check_sum)
@@ -123,6 +151,7 @@ const AccountController = {
           select: {
             token_address: true
           },
+          
       })
 
       result.moreInfor = moreInfor
@@ -130,11 +159,13 @@ const AccountController = {
       const uniqueTokenAddressSet = new Set(asset.map(item => item.token_address));
       // console.log(uniqueTokenAddressSet)
       const uniqueTokenAddressArray = Array.from(uniqueTokenAddressSet);
+      
+      const paginateArr = paginateArray(uniqueTokenAddressArray, page, perPage)
       result.token_holding = uniqueTokenAddressArray.length
       result.tokens_list = []
-
+  
       // for (let token of uniqueTokenAddressArray) {
-      const tokenPromises = uniqueTokenAddressArray.map(async(token) => { 
+      const tokenPromises = paginateArr.map(async(token) => { 
       let item = {}
       item.token_address = token 
       const tokenExisting = await prisma.tokens.findUnique({
@@ -190,7 +221,7 @@ const AccountController = {
         }
       })
       for (let tokenTransfer of tokenTransfers) {
-        console.log("tokenTransfe: ", tokenTransfer)
+        // console.log("tokenTransfe: ", tokenTransfer)
           const token = await prisma.tokens.findUnique({
             where: {
               address: tokenTransfer.token_address
@@ -396,6 +427,9 @@ const AccountController = {
 
   getAccountERC20Overview: async(req, res) => {
     try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
       const address = req.params.address.toLowerCase()
       const addressToCheckSum = await web3.utils.toChecksumAddress(address)
       const contract = new web3.eth.Contract(minABI, addressToCheckSum)
@@ -417,25 +451,27 @@ const AccountController = {
 
       const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
       const totalSupply = await contract.methods.totalSupply().call()
-      
+      const paginateArr = paginateArray(uniqueAddressesArray, page, perPage);
+
       let totalNumberHolder = 0;
       let holders = []
-      for (let holder of uniqueAddressesArray) {
-        console.log(contract)
+      const updateHolder = paginateArr.map(async(holder) => {
+        // console.log(contract)
         balance = await contract.methods.balanceOf(holder).call()
         if (holder == '0x0000000000000000000000000000000000000000') {
-          continue;
+          
+        } else {
+          if(balance > 0) {
+            totalNumberHolder += 1;
+            newHolder = {}
+            newHolder.address = holder
+            newHolder.quantity = balance
+            newHolder.percentage = balance / totalSupply
+            holders.push(newHolder)
+          } 
         }
-        if(balance > 0) {
-          totalNumberHolder += 1;
-          newHolder = {}
-          newHolder.address = holder
-          newHolder.quantity = balance
-          newHolder.percentage = balance / totalSupply
-          holders.push(newHolder)
-        } 
-      }
-      
+      })
+      await Promise.all(updateHolder);
 
       res.status(200).send({
         totalSupply: totalSupply,
@@ -473,43 +509,59 @@ const AccountController = {
           token_address: address
         }, 
         select: {
-          from_address: true,
-          to_address: true, 
-        }
+          // from_address: true,
+          // to_address: true,
+          value: true
+        },
       })
-      const uniqueAddressesSet = new Set();
+      // console.log(stakeHolders)
+      // const uniqueAddressesSet = new Set();
+      const uniqueTokenIdSet = new Set();
 
       stakeHolders.forEach(transaction => {
-        uniqueAddressesSet.add(transaction.from_address)
-        uniqueAddressesSet.add(transaction.to_address)
+        // uniqueAddressesSet.add(transaction.from_address)
+        // uniqueAddressesSet.add(transaction.to_address)
+        uniqueTokenIdSet.add(Number(transaction.value))
       })
-
-      const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
-      
-      console.log(uniqueAddressesArray)
+      // const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
+      const uniqueTokenIdArray = Array.from(uniqueTokenIdSet)
 
       let totalNumberHolder = 0;
       let holders = []
-      for (let holder of uniqueAddressesArray) {
-        if (holder == '0x0000000000000000000000000000000000000000') {
-          continue;
-        }
-        balance = await contract.methods.balanceOf(holder).call()
-        if(balance > 0) {
-          totalNumberHolder += 1;
-          newHolder = {}
-          newHolder.address = holder
-          newHolder.quantity = balance
-          holders.push(newHolder)
-        } 
+      for (let tokenID of uniqueTokenIdArray) {
+        holder = await contract.methods.ownerOf(tokenID).call()
+        totalNumberHolder += 1;
+        newHolder = {}
+        newHolder.holder = holder
+        newHolder.tokenIDs = tokenID
+        holders.push(newHolder)
       }
-      // const totalSupply = await contract.methods.totalSupply().call()
+      console.log(holders)
+      const resultObject = holders.reduce((accumulator, currentValue) => {
+        const holderKey = currentValue.holder;
+        // console.log("accumulator: ", accumulator)
+        // console.log("currentValue: ", currentValue)
+        // console.log("accumulator[holderKey]: ", accumulator[holderKey])
+        if (!accumulator[holderKey]) {
+          accumulator[holderKey] = { holder: holderKey, tokenIDs: [currentValue.tokenIDs] };
+        } else {
+          accumulator[holderKey].tokenIDs.push(currentValue.tokenIDs);
+        }
+        
+        return accumulator;
+      }, {});
+      
+      const finalResultArray = Object.values(resultObject);
+
+      finalResultArray.map((holder) => {
+        holder.quantity = holder.tokenIDs.length
+      })
       
 
       res.status(200).send({
         totalSupply: 0,
         totalNumberHolder: totalNumberHolder,
-        holdersAddress: holders,
+        holdersAddress: finalResultArray,
       })
 
     } catch (error) {
@@ -526,9 +578,25 @@ const AccountController = {
       const NFT = await prisma.tokens.findUnique({
         where: {
           address: address
+        }, 
+        select: {
+          address: true,
+          name: true,
+          symbol: true,
+          block_timestamp: true
         }
       })
       
+      const creator = await prisma.transactions.findFirst({
+        where: {
+          receipt_contract_address: address
+        }, 
+        select: {
+          hash: true,
+          from_address: true
+        }
+      })
+      result.creator = creator
       result.NTF_item = NFT,
       result.tokenId = id
 

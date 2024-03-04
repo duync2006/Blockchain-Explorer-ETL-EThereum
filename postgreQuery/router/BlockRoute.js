@@ -6,11 +6,13 @@ router.get("/blockNumber/:number", BlockController.getBlockNumber)
 
 router.get("/blockHash/:blockHash", BlockController.getBlockHash)
 
-router.get("/lastest", BlockController.getLatestBlocks)
+router.get("/lastestBlocks", BlockController.getLatestBlocks)
 
 router.get("/total", BlockController.getTotalBlocks)
 
 router.get("/", BlockController.getAllBlocks)
+
+router.get("/latest", BlockController.getDetailLatestBlock)
 
 router.delete("/", BlockController.deleteAll)
 

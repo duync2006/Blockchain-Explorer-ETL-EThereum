@@ -60,12 +60,19 @@ const StatisticController = {
         startDate = new Date(currentDate.getTime() - 30 * 24 * 60 * 60 * 1000);
       } else if (filterOption === '3') {
         startDate = new Date(currentDate.getTime() - 90 * 24 * 60 * 60 * 1000);
-      } else {
+      } else if (filterOption === '4') {
+        startDate = new Date(currentDate.getTime() - 365 * 24 * 60 * 60 * 1000);
+      } else if (filterOption === '5') {
+        startDate = new Date(currentDate.getTime() - 2* 365 * 24 * 60 * 60 * 1000);
+      } else if (filterOption === '6') {
+        startDate = new Date(currentDate.getTime() - 3* 365 * 24 * 60 * 60 * 1000);
+      }
+      else {
         return res.status(400).json({ error: 'Invalid filter option' });
       }
   
       // Lấy danh sách các giao dịch trong khoảng thời gian đã xác định
-      const transactions = await prisma.transactions.findMany({
+      const transactions = await prisma.transaction_partition.findMany({
         where: {
           block_timestamp: {
             gte: startDate,
@@ -88,7 +95,12 @@ const StatisticController = {
         }
       });
       await Promise.all([promise])
-      return res.json({ "transactionStatistics": transactionCountByDay });
+      const convertArrayOfObjects = Object.entries(transactionCountByDay).map(([date, quantity]) => ({
+        date,
+        quantity
+      }));
+      const arrayOfObjects =  await Promise.all(convertArrayOfObjects)
+      return res.json(arrayOfObjects);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       return res.status(500).json({ error: 'Internal Server Error' });

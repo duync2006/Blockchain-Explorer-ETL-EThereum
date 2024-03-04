@@ -6,11 +6,14 @@ const ExtractController = {
     startBlock = request.body.startBlockNumber;
     endBlock = request.body.endBlockNumber;
     provider = request.body.provider;
-    if (startBlock == undefined || endBlock == undefined) {
-      const web3 = new Web3(provider)
-      startBlock = await web3.eth.getBlockNumber()
-      endBlock = startBlock
-    }
+    // if (startBlock == undefined || endBlock == undefined) {
+    //   const web3 = new Web3(provider)
+    //   startBlock = await web3.eth.getBlockNumber()
+    //   endBlock = startBlock
+    // }
+    const web3 = new Web3(provider)
+    if (startBlock == undefined) startBlock = await web3.eth.getBlockNumber()
+    if (endBlock == undefined) endBlock = await web3.eth.getBlockNumber()
     const command = 'ethereumetl'
     const args = ['export_all', '-s', startBlock, '-e', endBlock, '-o', 'output.txt', '-p', provider]
 

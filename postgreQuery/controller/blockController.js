@@ -87,6 +87,16 @@ const BlockController = {
       
       res.status(500).send(err)
     }
+  },
+  getDetailLatestBlock: async(req,res) => {
+    try {
+      const lastestBlockNumber = await web3.eth.getBlockNumber()
+      const lastestBlock = await web3.eth.getBlock(lastestBlockNumber)
+      res.json(lastestBlock)
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error)
+    }
   }
 }
 
