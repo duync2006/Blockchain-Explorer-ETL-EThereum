@@ -223,20 +223,23 @@ const AccountController = {
           block_timestamp: 'desc'
         }
       })
-      for (let tokenTransfer of tokenTransfers) {
-        // console.log("tokenTransfe: ", tokenTransfer)
-          const token = await prisma.tokens.findUnique({
-            where: {
-              address: tokenTransfer.token_address
+      // for (let tokenTransfer of tokenTransfers) {
+      const promises = tokenTransfers.map(async(tokenTransfer) => {
+          // console.log("tokenTransfe: ", tokenTransfer)
+            const token = await prisma.tokens.findUnique({
+              where: {
+                address: tokenTransfer.token_address
+              }
+            })
+            if (token != null) {
+              if(token.decimals != null) {
+                tokenTransfer.token = token
+                tokenTransfersERC20.push(tokenTransfer)
+              }
             }
-          })
-          if (token != null) {
-            if(token.decimals != null) {
-              tokenTransfer.token = token
-              tokenTransfersERC20.push(tokenTransfer)
-            }
-          }
-      }
+        })
+
+      await Promise.all(promises)
       tokenTransfersERC20 = paginateArray(tokenTransfersERC20, page, perPage)
       res.status(200).send(toObject(tokenTransfersERC20))
     } catch (err) {
@@ -263,8 +266,9 @@ const AccountController = {
           block_timestamp: 'desc'
         }
       })
-      for (let tokenTransfer of tokenTransfers) {
+      // for (let tokenTransfer of tokenTransfers) {
         // console.log("tokenTransfer: ", tokenTransfer)
+      const promises = tokenTransfers.map(async(tokenTransfer) => {
           const token = await prisma.tokens.findUnique({
             where: {
               address: tokenTransfer.token_address
@@ -277,7 +281,8 @@ const AccountController = {
               tokenTransfersERC721.push(tokenTransfer)
             }
           } 
-      }
+      })
+      await Promise.all(promises)
       tokenTransfersERC721 = paginateArray(tokenTransfersERC721, page, perPage)
       res.status(200).send(toObject(tokenTransfersERC721))
     } catch (err) {
