@@ -543,7 +543,7 @@ const AccountController = {
 
       const resultObject = holders.reduce((accumulator, currentValue) => {
         const holderKey = currentValue.holder;
-        console.log("accumulator: ", accumulator)
+        // console.log("accumulator: ", accumulator)
         // console.log("currentValue: ", currentValue)
         // console.log("accumulator[holderKey]: ", accumulator[holderKey])
         if (!accumulator[holderKey]) {
@@ -555,12 +555,13 @@ const AccountController = {
         return accumulator;
       }, {});
       
-      const finalResultArray = Object.values(resultObject);
+      let finalResultArray = Object.values(resultObject);
 
       finalResultArray.map((holder) => {
         holder.quantity = holder.tokenIDs.length
       })
       
+      finalResultArray = finalResultArray.sort((a,b) => b.quantity - a.quantity);
       const paginateArr = paginateArray(finalResultArray, page, perPage)
 
       res.status(200).send({
