@@ -1,12 +1,7 @@
 const prisma = require('../config')
 const web3 = require('../web3')
-const toObject = (data) => {
-  return JSON.parse(JSON.stringify(data, (key, value) =>
-                            typeof value === 'bigint'
-                                ? value.toString()
-                                : value // return everything else unchanged
-  ))
-}
+const toObject = require('../helpers/toObject')
+
 const ContractController = {
   getAll: async(req,res) => {
     try{

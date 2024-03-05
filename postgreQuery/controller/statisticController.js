@@ -1,12 +1,7 @@
 const prisma = require('../config')
 const web3 = require('../web3')
-const toObject = (data) => {
-  return JSON.parse(JSON.stringify(data, (key, value) =>
-                            typeof value === 'bigint'
-                                ? value.toString()
-                                : value // return everything else unchanged
-  ))
-}
+const toObject = require('../helpers/toObject')
+
 const StatisticController = {
   dashboardStatistic: async(req, res) => {
     const totalTransaction = await prisma.transactions.count()
@@ -48,7 +43,7 @@ const StatisticController = {
   filterNumberTrans: async(req, res) => {
     try {
       const currentDate = new Date();
-      
+      console.log(currentDate.toISOString().split('T')[0])
       // Lấy giá trị của tham số truy vấn từ phần thân của yêu cầu
       const filterOption = req.query.options;
 
@@ -72,21 +67,22 @@ const StatisticController = {
       }
   
       // Lấy danh sách các giao dịch trong khoảng thời gian đã xác định
-      const transactions = await prisma.transaction_partition.findMany({
-        where: {
-          block_timestamp: {
-            gte: startDate,
-            lte: currentDate,
-          },
-        },
-        orderBy: {
-          block_timestamp: 'asc',
-        },
-      });
-      
+      // const transactions = await prisma.transaction_partition.findMany({
+      //   where: {
+      //     block_timestamp: {
+      //       gte: startDate,
+      //       lte: currentDate,
+      //     },
+      //   },
+      //   orderBy: {
+      //     block_timestamp: 'asc',
+      //   },
+      // });
+      const transactions = await prisma.$queryRaw`SELECT block_timestamp FROM transaction_partition where block_timestamp >= ${startDate} and block_timestamp <= ${currentDate}`
+
       const transactionCountByDay = {};
 
-      const promise = transactions.forEach((transaction) => {
+      const promise = transactions.map((transaction) => {
         const date = transaction.block_timestamp.toISOString().split('T')[0];
         if (transactionCountByDay[date]) {
           transactionCountByDay[date]++;
@@ -94,7 +90,7 @@ const StatisticController = {
           transactionCountByDay[date] = 1;
         }
       });
-      await Promise.all([promise])
+      await Promise.all(promise)
       const convertArrayOfObjects = Object.entries(transactionCountByDay).map(([date, quantity]) => ({
         date,
         quantity
