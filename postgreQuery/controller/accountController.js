@@ -207,8 +207,11 @@ const AccountController = {
   getTokenTransferERC20: async(req, res) => {
 
     try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
       const address = req.params.address.toLowerCase()
-      const tokenTransfersERC20 = []
+      let tokenTransfersERC20 = []
       const tokenTransfers = await prisma.token_transfers.findMany({
         where: {
           OR: [
@@ -234,6 +237,7 @@ const AccountController = {
             }
           }
       }
+      tokenTransfersERC20 = paginateArray(tokenTransfersERC20, page, perPage)
       res.status(200).send(toObject(tokenTransfersERC20))
     } catch (err) {
       console.log(err)
@@ -243,8 +247,11 @@ const AccountController = {
 
   getTokenTransferNFT: async(req, res) => {
     try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
       const address = req.params.address.toLowerCase()
-      const tokenTransfersERC721 = []
+      let tokenTransfersERC721 = []
       const tokenTransfers = await prisma.token_transfers.findMany({
         where: {
           OR: [
@@ -264,13 +271,14 @@ const AccountController = {
             }
           })
           if (token != null) {
-            console.log(token)
+            // console.log(token)
             if(token.decimals == null) {
               tokenTransfer.token = token
               tokenTransfersERC721.push(tokenTransfer)
             }
           } 
       }
+      tokenTransfersERC721 = paginateArray(tokenTransfersERC721, page, perPage)
       res.status(200).send(toObject(tokenTransfersERC721))
     } catch (err) {
       console.log(err)
@@ -487,12 +495,18 @@ const AccountController = {
 
   getERCTokenTransfers_SCA: async(req, res) => {
     try {
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
       address = req.params.address.toLowerCase()
-      tokenTransfers = await prisma.token_transfers.findMany({
+      let tokenTransfers = await prisma.token_transfers.findMany({
         where: {
           token_address: address
         }
       })
+      
+      tokenTransfers = paginateArray(tokenTransfers, page, perPage)
+
       res.status(200).send(toObject(tokenTransfers))
     } catch (error) {
       res.status(500).send(error)
