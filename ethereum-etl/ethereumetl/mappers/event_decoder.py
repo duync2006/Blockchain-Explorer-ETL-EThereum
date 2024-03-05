@@ -7,11 +7,9 @@ from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_da
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from web3.contract import Contract
 
-
 class EventLogDecoder:
     def __init__(self, contract: Contract):
         self.contract = contract
-        # print(self.contract.abi)
         self.event_abis = [abi for abi in self.contract.abi if abi['type'] == 'event']
         self._sign_abis = {event_abi_to_log_topic(abi): abi for abi in self.event_abis}
         self._name_abis = {abi['name']: abi for abi in self.event_abis}
@@ -38,7 +36,7 @@ class EventLogDecoder:
         decoded = self.contract.web3.codec.decode(types, cast(HexBytes, params))
 
         normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decoded)
-        # print("normalized: ", normalized)
+        
         # print("dict: ", dict(zip(names, normalized)))
         return dict(zip(names, normalized))
 

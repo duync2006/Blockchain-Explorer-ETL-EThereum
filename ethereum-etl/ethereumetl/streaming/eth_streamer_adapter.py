@@ -23,8 +23,10 @@ from ethereumetl.mappers.function_decoder import FunctionInputDecoder
 from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
 from sqlalchemy import create_engine
 from sqlalchemy import text
+
+from ethereumetl.storageABI import eternalStorage
 import json
-w3 = Web3(Web3.HTTPProvider('https://sepolia.infura.io/v3/b74c1395134849e598cdee29efc3bb3e'))
+w3 = Web3(Web3.HTTPProvider('https://vibi-seed.vbchain.vn/'))
 engine = create_engine("postgresql+pg8000://postgres:billboss123@localhost:5432/ETL_Ethereum")
 class EthStreamerAdapter:
     def __init__(
@@ -174,32 +176,69 @@ class EthStreamerAdapter:
             #  3. receipt
             #  4. logs =  myContract.events.Transfer().processReceipt(receipt)
        
+        ABIStorage = w3.eth.contract(address = '0x8ED8C2686dC6A9fa2de50bdd2192598389a8ABFC', abi = eternalStorage)
+       
+        # keyEventAbi = w3.keccak(text='EventABI0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef')
+        # print(keyEventAbi)
+        # eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
+        # print('eventABI: ', eventabi)
         
         for log in logs: 
-            try: 
-                contract_address = log['address'];
-                contract_address_to_checksum = w3.to_checksum_address(contract_address)
-                with engine.connect() as connection:
-                    query = text('SELECT abi FROM abis WHERE contract_address = :c')
-                    contract_abi = connection.execute(statement=query, parameters=dict(c = contract_address_to_checksum)).mappings().all()
-                    if contract_abi: 
-                        myContract = w3.eth.contract(address=contract_address_to_checksum, abi=contract_abi[0]['abi']) 
-                        eventDecoder = EventLogDecoder(myContract)
-                        result = eventDecoder.decode_log(log)
-                        log['decode'] = result;
-                    else: 
-                        query = text('SELECT * FROM event_signatures WHERE topic_0 = :t')
-                        topic_0 = log['topics'][0]
-                        event_signatures = connection.execute(statement=query, parameters=dict(t = topic_0)).mappings().all()
-                        if event_signatures:
-                            inputs_array = event_signatures[0]['inputs']
-                            myContract = w3.eth.contract(address="0x0000000000000000000000000000000000000000", abi=event_signatures[0]['inputs'])
-                            eventDecoder = EventLogDecoder(myContract)
-                            result = eventDecoder.decode_log(log)
-                            log['decode'] = result;
-            except:
-                pass
-                # print(error)
+            # try:
+                # print('logTopics0:', log['topics'][0])
+                keyEventAbi = w3.keccak(text='EventABI' + log['topics'][0])
+                eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
+                # print("eventabi: ", eventabi)
+                if(eventabi): 
+                    eventabi = eventabi.replace("'", '"')
+                    eventAbiToDict = json.loads(eventabi)
+                    # print('eventAbiToDict: ', eventAbiToDict)
+                    data = [t[2:] for t in log['topics']]
+                    data += [log['data'][2:]]
+                    data = "0x" + "".join(data)
+                    # print("data: ", data)
+                    from hexbytes import HexBytes
+                    data = HexBytes(data)  # type: ignore
+                    selector, params = data[:32], data[32:]
+
+                    from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_data
+                    names = get_abi_input_names(eventAbiToDict)
+                    types = get_abi_input_types(eventAbiToDict)
+                    # print('names: ', names)
+                    # print('types: ', types)
+                    from eth_abi import abi
+                    from typing import Any, Dict, cast, Union
+                    decodedABI = abi.decode(types, cast(HexBytes, params))
+                    # print("decodeABI: ", decodedABI)
+                    from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
+                    normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decodedABI)
+                    # print("dict: ", dict(zip(names, normalized)))
+                    log['decode'] =  dict(zip(names, normalized))
+
+                # contract_address = log['address'];
+                # contract_address_to_checksum = w3.to_checksum_address(contract_address)
+                # with engine.connect() as connection:
+                #     query = text('SELECT abi FROM abis WHERE contract_address = :c')
+                #     contract_abi = connection.execute(statement=query, parameters=dict(c = contract_address_to_checksum)).mappings().all()
+                #     if contract_abi: 
+                #         myContract = w3.eth.contract(address=contract_address_to_checksum, abi=contract_abi[0]['abi']) 
+                #         eventDecoder = EventLogDecoder(myContract)
+                #         result = eventDecoder.decode_log(log)
+                #         log['decode'] = result;
+                #     else: 
+                #         query = text('SELECT * FROM event_signatures WHERE topic_0 = :t')
+                #         topic_0 = log['topics'][0]
+                #         event_signatures = connection.execute(statement=query, parameters=dict(t = topic_0)).mappings().all()
+                #         if event_signatures:
+                #             inputs_array = event_signatures[0]['inputs']
+                #             myContract = w3.eth.contract(address="0x0000000000000000000000000000000000000000", abi=event_signatures[0]['inputs'])
+                #             eventDecoder = EventLogDecoder(myContract)
+                #             result = eventDecoder.decode_log(log)
+                #             log['decode'] = result;
+
+            # except:
+            #     pass
+                
         return receipts, logs
 
     def _extract_token_transfers(self, logs):
