@@ -73,9 +73,11 @@ class EthStreamerAdapter:
                                 functionDecoder = FunctionInputDecoder(myContract)
                                 result = functionDecoder.decode_function_input(transaction["input"])
                                 result["method"] = function_signature[0]["func_name"]
+                                # print("result: ", result)
                                 transaction["decodeInput"] = result
                 except:
                     pass
+                    # print(error)
                 
         # Export receipts and logs
         receipts, logs = [], []
@@ -91,15 +93,7 @@ class EthStreamerAdapter:
         traces = []
         if self._should_export(EntityType.TRACE):
             traces = self._export_traces(start_block, end_block, transactions)
-        # Export contracts
-        contracts = []
-        if self._should_export(EntityType.CONTRACT):
-            contracts = self._export_contracts(traces, self.node_type)
 
-        # Export tokens
-        tokens = []
-        if self._should_export(EntityType.TOKEN):
-            tokens = self._extract_tokens(contracts)
 
         enriched_blocks = blocks \
             if EntityType.BLOCK in self.entity_types else []
@@ -111,6 +105,16 @@ class EthStreamerAdapter:
             if EntityType.TOKEN_TRANSFER in self.entity_types else []
         enriched_traces = enrich_traces(transactions, traces) \
             if EntityType.TRACE in self.entity_types else []
+        # Export contracts
+        contracts = []
+        if self._should_export(EntityType.CONTRACT):
+            contracts = self._export_contracts(enriched_traces, self.node_type)
+
+        # Export tokens
+        tokens = []
+        if self._should_export(EntityType.TOKEN):
+            tokens = self._extract_tokens(contracts)
+
         enriched_contracts = enrich_contracts(blocks, contracts) \
             if EntityType.CONTRACT in self.entity_types else []
         enriched_tokens = enrich_tokens(blocks, tokens) \
@@ -145,6 +149,7 @@ class EthStreamerAdapter:
         blocks_and_transactions_job.run()
         blocks = blocks_and_transactions_item_exporter.get_items('block')
         transactions = blocks_and_transactions_item_exporter.get_items('transaction')
+        # print("transaction: ", transactions)
         
         return blocks, transactions
 
@@ -168,6 +173,7 @@ class EthStreamerAdapter:
             #  2. tx_hash receipt.transaction_hash PASS
             #  3. receipt
             #  4. logs =  myContract.events.Transfer().processReceipt(receipt)
+       
         
         for log in logs: 
             try: 
@@ -219,6 +225,7 @@ class EthStreamerAdapter:
                 item_exporter=exporter
             )
             job.run()
+            
             # Change the key-name here
             traces = exporter.get_items('trace')
         elif self.node_type == 'GETH': 
@@ -235,15 +242,13 @@ class EthStreamerAdapter:
                 transactions=transactions
             )
             job.run()
-            
+            # Change the key-name here
             traces = exporter.get_items('geth_trace')
-            
         else: 
             raise Exception("Sorry, cannot identify node type is PARITY or GETH")
         return traces
 
     def _export_contracts(self, traces, node_type):
-        
         exporter = InMemoryItemExporter(item_types=['contract'])
         job = ExtractContractsJob(
             traces_iterable=traces,

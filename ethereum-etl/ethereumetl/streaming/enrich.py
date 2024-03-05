@@ -213,12 +213,12 @@ def enrich_traces(transactions, traces):
 
     # if len(result) != len(traces):
     #     raise ValueError('The number of contracts is wrong ' + str(result))
-    print("RESULT: ", result)
-    print('TRANSACTIONS: ', transactions)
     return result
 
 
 def enrich_contracts(blocks, contracts):
+    print("BLOCKS: ", blocks)
+    print("CONTRACTS: ", contracts)
     result = list(join(
         contracts, blocks, ('block_number', 'number'),
         [
@@ -235,7 +235,7 @@ def enrich_contracts(blocks, contracts):
             ('timestamp', 'block_timestamp'),
             ('hash', 'block_hash'),
         ]))
-
+    print("RESULT: ", result)
     if len(result) != len(contracts):
         raise ValueError('The number of contracts is wrong ' + str(result))
 

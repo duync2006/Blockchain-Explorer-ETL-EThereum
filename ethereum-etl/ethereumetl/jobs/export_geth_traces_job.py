@@ -76,7 +76,7 @@ class ExportGethTracesJob(BaseJob):
         trace_transaction_rpc = list(generate_geth_trace_by_transaction_hash_json_rpc(self.transactions))
         response_1 = self.batch_web3_provider.make_batch_request(json.dumps(trace_transaction_rpc))
         # print('RPC: ', trace_transaction_rpc)
-        # print("RESPONSE 1: ", json.dumps(response_1))
+        print("RESPONSE 1: ", json.dumps(response_1))
         # print("RESPONSE: ", response)
 
         # for response_item in response:
@@ -100,10 +100,9 @@ class ExportGethTracesJob(BaseJob):
             if type(response_item) is str:
                 break 
             txHash = response_item.get('id')
-            result = rpc_response_to_result(response_item)
             traceArray = flattenTraceCalls(response_item)
             print("TRACE ARRAY: ", traceArray)
-            geth_traces = self.geth_trace_mapper.array_to_EthGethTrace(traceArray, txHash, traceArray[-1]['result']['type'])
+            geth_traces = self.geth_trace_mapper.array_to_EthGethTrace(traceArray, txHash, response_item['result']['type'])
             print("geth_traces: ", geth_traces)
             calculate_trace_indexes(geth_traces)
             try: 
@@ -127,7 +126,7 @@ def calculate_trace_indexes(traces):
 
 def getTraceIndex(index): 
     address = []
-    if index >= 1000:
+    if index > 1000:
         address.extend(getTraceIndex(int(index/1000)))
     address.append(index % 1000)
     return (address)
@@ -152,15 +151,15 @@ def getTraceAddress(traceResult, index = 1, isChild = False):
             index = index + 1;
     return internalTnxs
         
-# print(getTraceAddress(trace['result']))
 
 def flattenTraceCalls(traceDict):
-    txHash = traceDict['id']
     traceArray = []
     traceArray.extend(getTraceAddress(traceDict['result']))
     firstTrace = traceDict.copy()
     if 'calls' in traceDict['result']:
         firstTrace['result'].pop('calls', None)
-        firstTrace['traceAddress'] = [0]
-    traceArray.extend([firstTrace])
+    firstTrace['result']['traceAddress'] = []
+    # print("firstTrace: ", firstTrace)
+    traceArray.extend([firstTrace['result']])
+    # print("flatten TRACE: ", traceArray )
     return traceArray
