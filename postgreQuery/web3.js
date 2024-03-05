@@ -4,7 +4,7 @@ const provider_VB = "wss://vibi.vbchain.vn/ws";
 const provider_MBC = "https://mbctest.vbchain.vn/VBCinternship2023"
 const provider_BSC = "https://bsc-mainnet.nodereal.io/v1/ff851b38f08c4cd9a06052692cd45eb3"
 
-var web3 = new Web3(provider_infura);
+var web3 = new Web3(provider_VB);
 
 web3.eth.extend({
   property: 'txpool',

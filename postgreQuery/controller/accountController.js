@@ -501,6 +501,10 @@ const AccountController = {
 
   getAccountERC721Overview: async(req, res) => {
     try {
+
+      const perPage = parseInt(req.query.limit || 20)
+      const page = parseInt(req.query.page || 1)
+
       const address = req.params.address.toLowerCase()
       const addressToCheckSum = await web3.utils.toChecksumAddress(address)
       const contract = new web3.eth.Contract(minABI, addressToCheckSum)
@@ -525,21 +529,21 @@ const AccountController = {
       })
       // const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
       const uniqueTokenIdArray = Array.from(uniqueTokenIdSet)
-
-      let totalNumberHolder = 0;
+      // console.log('uniqueTokenIdArray: ', uniqueTokenIdArray)
       let holders = []
       for (let tokenID of uniqueTokenIdArray) {
+        // console.log(contract)
         holder = await contract.methods.ownerOf(tokenID).call()
-        totalNumberHolder += 1;
+        console.log(holder)
         newHolder = {}
         newHolder.holder = holder
         newHolder.tokenIDs = tokenID
         holders.push(newHolder)
       }
-      console.log(holders)
+
       const resultObject = holders.reduce((accumulator, currentValue) => {
         const holderKey = currentValue.holder;
-        // console.log("accumulator: ", accumulator)
+        console.log("accumulator: ", accumulator)
         // console.log("currentValue: ", currentValue)
         // console.log("accumulator[holderKey]: ", accumulator[holderKey])
         if (!accumulator[holderKey]) {
@@ -557,11 +561,12 @@ const AccountController = {
         holder.quantity = holder.tokenIDs.length
       })
       
+      const paginateArr = paginateArray(finalResultArray, page, perPage)
 
       res.status(200).send({
         totalSupply: 0,
-        totalNumberHolder: totalNumberHolder,
-        holdersAddress: finalResultArray,
+        totalNumberHolder: finalResultArray.length,
+        holdersAddress: paginateArr,
       })
 
     } catch (error) {
