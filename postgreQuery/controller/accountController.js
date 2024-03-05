@@ -451,18 +451,16 @@ const AccountController = {
 
       const uniqueAddressesArray  = Array.from(uniqueAddressesSet)
       const totalSupply = await contract.methods.totalSupply().call()
-      const paginateArr = paginateArray(uniqueAddressesArray, page, perPage);
+     
 
-      let totalNumberHolder = 0;
       let holders = []
-      const updateHolder = paginateArr.map(async(holder) => {
+      const updateHolder = uniqueAddressesArray.map(async(holder) => {
         // console.log(contract)
         balance = await contract.methods.balanceOf(holder).call()
         if (holder == '0x0000000000000000000000000000000000000000') {
           
         } else {
           if(balance > 0) {
-            totalNumberHolder += 1;
             newHolder = {}
             newHolder.address = holder
             newHolder.quantity = balance
@@ -472,11 +470,13 @@ const AccountController = {
         }
       })
       await Promise.all(updateHolder);
+      const sortedHolders = holders.sort((a, b) => b.quantity - a.quantity)
+      const paginateArr = paginateArray(sortedHolders, page, perPage);
 
       res.status(200).send({
         totalSupply: totalSupply,
-        totalNumberHolder: totalNumberHolder,
-        holdersAddress: holders,
+        totalNumberHolder: holders.length,
+        holdersAddress: paginateArr,
       })
 
     } catch (error) {
