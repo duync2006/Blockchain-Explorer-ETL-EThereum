@@ -444,8 +444,15 @@ const AccountController = {
       const page = parseInt(req.query.page || 1)
 
       const address = req.params.address.toLowerCase()
+      const ERC20Contract = await prisma.contracts.findUnique({where: {address: address}})
+      if (!ERC20Contract.is_erc20) return res.status(500).json({
+        success: false,
+        message: "contract is not ERC20 Contract"
+      })
+
       const addressToCheckSum = await web3.utils.toChecksumAddress(address)
       const contract = new web3.eth.Contract(minABI, addressToCheckSum)
+
       const stakeHolders = await prisma.token_transfers.findMany({
         where: {
           token_address: address
@@ -526,6 +533,12 @@ const AccountController = {
 
       const address = req.params.address.toLowerCase()
       const addressToCheckSum = await web3.utils.toChecksumAddress(address)
+      const ERC721Contract = await prisma.contracts.findUnique({where: {address: address}})
+      if (!ERC721Contract.is_erc721) return res.status(500).json({
+        success: false,
+        message: "contract is not ERC721 Contract"
+      })
+
       const contract = new web3.eth.Contract(minABI, addressToCheckSum)
       const stakeHolders = await prisma.token_transfers.findMany({
         where: {
@@ -550,15 +563,16 @@ const AccountController = {
       const uniqueTokenIdArray = Array.from(uniqueTokenIdSet)
       // console.log('uniqueTokenIdArray: ', uniqueTokenIdArray)
       let holders = []
-      for (let tokenID of uniqueTokenIdArray) {
+      const promises = uniqueTokenIdArray.map(async(tokenID)=> {
         // console.log(contract)
         holder = await contract.methods.ownerOf(tokenID).call()
-        console.log(holder)
         newHolder = {}
         newHolder.holder = holder
         newHolder.tokenIDs = tokenID
         holders.push(newHolder)
-      }
+      })
+      
+      await Promise.all(promises)
 
       const resultObject = holders.reduce((accumulator, currentValue) => {
         const holderKey = currentValue.holder;
