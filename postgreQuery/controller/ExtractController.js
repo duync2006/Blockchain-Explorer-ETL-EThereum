@@ -14,8 +14,11 @@ const ExtractController = {
     const web3 = new Web3(provider)
     if (startBlock == undefined) startBlock = await web3.eth.getBlockNumber()
     if (endBlock == undefined) endBlock = await web3.eth.getBlockNumber()
-    const command = 'ethereumetl'
-    const args = ['export_all', '-s', startBlock, '-e', endBlock, '-o', 'output.txt', '-p', provider]
+    
+    let path_name = process.cwd()
+    path_name = path_name + '/ethereum-etl/ethereumetl.py'
+    const command = 'python'
+    const args = [path_name,'export_all', '-s', startBlock, '-e', endBlock, '-o', 'output.txt', '-p', provider]
 
     const ethereumetlProcess = spawn(command, args)
 
@@ -49,8 +52,12 @@ const ExtractController = {
         startBlock = await web3.eth.getBlockNumber()
       }
       database = process.env.DATABASE_URL_FOR_EXTRACT
-      const command = 'ethereumetl'
-      const args = ['stream', '-s', startBlock, '-o', database, '-p', provider]
+
+      let path_name = process.cwd()
+      path_name = path_name + '/ethereum-etl/ethereumetl.py'
+      const command = 'python'
+      
+      const args = [path_name,'stream', '-s', startBlock, '-o', database, '-p', provider]
 
       const ethereumetlProcessAutomate = spawn(command, args)
 

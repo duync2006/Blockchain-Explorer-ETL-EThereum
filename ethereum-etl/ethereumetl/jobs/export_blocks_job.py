@@ -51,7 +51,6 @@ class ExportBlocksJob(BaseJob):
 
         self.batch_work_executor = BatchWorkExecutor(batch_size, max_workers)
         self.item_exporter = item_exporter
-
         self.export_blocks = export_blocks
         self.export_transactions = export_transactions
         if not self.export_blocks and not self.export_transactions:
