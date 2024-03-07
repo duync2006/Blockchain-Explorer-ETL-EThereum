@@ -234,10 +234,9 @@ class EthStreamerAdapter:
                     # print("decodeABI: ", decodedABI)
                     from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
                     normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decodedABI)
-                    normalized_decode = ["0x" + n.hex() for n in normalized if type(n) is bytes]
+                    normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized ]
                     print('normalized: ', normalized_decode)
                     result = dict(zip(names, normalized_decode))
-                    
                     log['decode'] = result
                 # contract_address = log['address'];
                 # contract_address_to_checksum = w3.to_checksum_address(contract_address)
