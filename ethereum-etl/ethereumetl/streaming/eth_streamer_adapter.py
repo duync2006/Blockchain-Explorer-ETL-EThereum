@@ -10,7 +10,7 @@ from ethereumetl.jobs.extract_contracts_job import ExtractContractsJob
 from ethereumetl.jobs.extract_token_transfers_job import ExtractTokenTransfersJob
 from ethereumetl.jobs.extract_tokens_job import ExtractTokensJob
 from ethereumetl.streaming.enrich import enrich_transactions, enrich_logs, enrich_token_transfers, enrich_traces, \
-    enrich_contracts, enrich_tokens
+    enrich_contracts, enrich_tokens, enrich_geth_traces
 from ethereumetl.streaming.eth_item_id_calculator import EthItemIdCalculator
 from ethereumetl.streaming.eth_item_timestamp_calculator import EthItemTimestampCalculator
 from ethereumetl.thread_local_proxy import ThreadLocalProxy
@@ -23,10 +23,11 @@ from ethereumetl.mappers.function_decoder import FunctionInputDecoder
 from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
 from sqlalchemy import create_engine
 from sqlalchemy import text
+from psycopg2.extras import Json
 
 from ethereumetl.storageABI import eternalStorage
 import json
-w3 = Web3(Web3.HTTPProvider('https://vibi-seed.vbchain.vn/'))
+w3 = Web3(Web3.HTTPProvider('https://agd-seed-1.vbchain.vn/'))
 engine = create_engine("postgresql+pg8000://postgres:billboss123@localhost:5432/ETL_Ethereum")
 class EthStreamerAdapter:
     def __init__(
@@ -95,6 +96,16 @@ class EthStreamerAdapter:
         traces = []
         if self._should_export(EntityType.TRACE):
             traces = self._export_traces(start_block, end_block, transactions)
+        if self.node_type == 'PARITY':
+            # Export contracts
+            contracts = []
+            if self._should_export(EntityType.CONTRACT):
+                contracts = self._export_contracts(traces,  self.node_type)
+
+            # Export tokens
+            tokens = []
+            if self._should_export(EntityType.TOKEN):
+                tokens = self._extract_tokens(contracts)
 
 
         enriched_blocks = blocks \
@@ -105,17 +116,22 @@ class EthStreamerAdapter:
             if EntityType.LOG in self.entity_types else []
         enriched_token_transfers = enrich_token_transfers(blocks, token_transfers) \
             if EntityType.TOKEN_TRANSFER in self.entity_types else []
-        enriched_traces = enrich_traces(transactions, traces) \
-            if EntityType.TRACE in self.entity_types else []
-        # Export contracts
-        contracts = []
-        if self._should_export(EntityType.CONTRACT):
-            contracts = self._export_contracts(enriched_traces, self.node_type)
+        if self.node_type == 'PARITY':
+            enriched_traces = enrich_traces(blocks, traces) \
+                if EntityType.TRACE in self.entity_types else []
+            print("enriched_traces: ", enriched_traces)
+        else: 
+            enriched_traces = enrich_geth_traces(transactions, traces) \
+                if EntityType.TRACE in self.entity_types else []
+            # Export contracts
+            contracts = []
+            if self._should_export(EntityType.CONTRACT):
+                contracts = self._export_contracts(enriched_traces, self.node_type)
 
-        # Export tokens
-        tokens = []
-        if self._should_export(EntityType.TOKEN):
-            tokens = self._extract_tokens(contracts)
+            # Export tokens
+            tokens = []
+            if self._should_export(EntityType.TOKEN):
+                tokens = self._extract_tokens(contracts)
 
         enriched_contracts = enrich_contracts(blocks, contracts) \
             if EntityType.CONTRACT in self.entity_types else []
@@ -176,7 +192,7 @@ class EthStreamerAdapter:
             #  3. receipt
             #  4. logs =  myContract.events.Transfer().processReceipt(receipt)
        
-        ABIStorage = w3.eth.contract(address = '0x8ED8C2686dC6A9fa2de50bdd2192598389a8ABFC', abi = eternalStorage)
+        ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
        
         # keyEventAbi = w3.keccak(text='EventABI0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef')
         # print(keyEventAbi)
@@ -184,7 +200,7 @@ class EthStreamerAdapter:
         # print('eventABI: ', eventabi)
         
         for log in logs: 
-            # try:
+            try:
                 # print('logTopics0:', log['topics'][0])
                 keyEventAbi = w3.keccak(text='EventABI' + log['topics'][0])
                 eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
@@ -192,7 +208,7 @@ class EthStreamerAdapter:
                 if(eventabi): 
                     eventabi = eventabi.replace("'", '"')
                     eventAbiToDict = json.loads(eventabi)
-                    # print('eventAbiToDict: ', eventAbiToDict)
+                    print('eventAbiToDict: ', eventAbiToDict)
                     data = [t[2:] for t in log['topics']]
                     data += [log['data'][2:]]
                     data = "0x" + "".join(data)
@@ -202,19 +218,27 @@ class EthStreamerAdapter:
                     selector, params = data[:32], data[32:]
 
                     from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_data
-                    names = get_abi_input_names(eventAbiToDict)
-                    types = get_abi_input_types(eventAbiToDict)
+                    names = []
+                    types = []
+                    for item in eventAbiToDict:
+                        if 'name' in item and 'type' in item:
+                            names.append(item['name'])
+                            types.append(item['type'])
                     # print('names: ', names)
                     # print('types: ', types)
                     from eth_abi import abi
                     from typing import Any, Dict, cast, Union
+                    # decodedABI = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
+
                     decodedABI = abi.decode(types, cast(HexBytes, params))
                     # print("decodeABI: ", decodedABI)
                     from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
                     normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decodedABI)
-                    # print("dict: ", dict(zip(names, normalized)))
-                    log['decode'] =  dict(zip(names, normalized))
-
+                    normalized_decode = ["0x" + n.hex() for n in normalized if type(n) is bytes]
+                    print('normalized: ', normalized_decode)
+                    result = dict(zip(names, normalized_decode))
+                    
+                    log['decode'] = result
                 # contract_address = log['address'];
                 # contract_address_to_checksum = w3.to_checksum_address(contract_address)
                 # with engine.connect() as connection:
@@ -223,7 +247,7 @@ class EthStreamerAdapter:
                 #     if contract_abi: 
                 #         myContract = w3.eth.contract(address=contract_address_to_checksum, abi=contract_abi[0]['abi']) 
                 #         eventDecoder = EventLogDecoder(myContract)
-                #         result = eventDecoder.decode_log(log)
+                        # result = eventDecoder.decode_log(log)
                 #         log['decode'] = result;
                 #     else: 
                 #         query = text('SELECT * FROM event_signatures WHERE topic_0 = :t')
@@ -236,9 +260,8 @@ class EthStreamerAdapter:
                 #             result = eventDecoder.decode_log(log)
                 #             log['decode'] = result;
 
-            # except:
-            #     pass
-                
+            except:
+                pass
         return receipts, logs
 
     def _extract_token_transfers(self, logs):

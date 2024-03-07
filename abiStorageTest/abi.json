@@ -1,6 +1,6 @@
-eternalStorage = [
+[
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -21,12 +21,12 @@ eternalStorage = [
         "type": "address"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -42,12 +42,12 @@ eternalStorage = [
         "type": "address"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -63,12 +63,12 @@ eternalStorage = [
         "type": "bool"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -89,12 +89,12 @@ eternalStorage = [
         "type": "bytes32"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -110,12 +110,12 @@ eternalStorage = [
         "type": "bytes32"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -131,12 +131,12 @@ eternalStorage = [
         "type": "bytes"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -152,12 +152,12 @@ eternalStorage = [
         "type": "int256"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -178,12 +178,12 @@ eternalStorage = [
         "type": "string"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -199,12 +199,12 @@ eternalStorage = [
         "type": "string"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -225,12 +225,12 @@ eternalStorage = [
         "type": "uint256"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -246,12 +246,12 @@ eternalStorage = [
         "type": "uint256"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -266,12 +266,12 @@ eternalStorage = [
     ],
     "name": "setUint",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -286,12 +286,12 @@ eternalStorage = [
     ],
     "name": "setAddress",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -306,12 +306,12 @@ eternalStorage = [
     ],
     "name": "setBool",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -326,12 +326,12 @@ eternalStorage = [
     ],
     "name": "setBytes32",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -346,12 +346,12 @@ eternalStorage = [
     ],
     "name": "setString",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -366,12 +366,12 @@ eternalStorage = [
     ],
     "name": "setBytes",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -386,12 +386,12 @@ eternalStorage = [
     ],
     "name": "deleteArrayAddress",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -406,12 +406,12 @@ eternalStorage = [
     ],
     "name": "deleteArrayBytes32",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -426,12 +426,12 @@ eternalStorage = [
     ],
     "name": "deleteArrayUint",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -446,12 +446,12 @@ eternalStorage = [
     ],
     "name": "deleteArrayString",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -466,12 +466,12 @@ eternalStorage = [
     ],
     "name": "pushArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -486,12 +486,12 @@ eternalStorage = [
     ],
     "name": "pushArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -506,12 +506,12 @@ eternalStorage = [
     ],
     "name": "pushArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -526,12 +526,12 @@ eternalStorage = [
     ],
     "name": "pushArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -546,12 +546,12 @@ eternalStorage = [
     ],
     "name": "setArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -566,12 +566,12 @@ eternalStorage = [
     ],
     "name": "setArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -586,12 +586,12 @@ eternalStorage = [
     ],
     "name": "setArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -606,12 +606,12 @@ eternalStorage = [
     ],
     "name": "setArray",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -627,12 +627,12 @@ eternalStorage = [
         "type": "address[]"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -648,12 +648,12 @@ eternalStorage = [
         "type": "bytes32[]"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -669,12 +669,12 @@ eternalStorage = [
         "type": "uint256[]"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -690,12 +690,12 @@ eternalStorage = [
         "type": "string[]"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -715,12 +715,12 @@ eternalStorage = [
     ],
     "name": "setArrayIndexValue",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -740,12 +740,12 @@ eternalStorage = [
     ],
     "name": "setArrayIndexValue",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -765,12 +765,12 @@ eternalStorage = [
     ],
     "name": "setArrayIndexValue",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "false",
+    "constant": false,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -790,12 +790,12 @@ eternalStorage = [
     ],
     "name": "setArrayIndexValue",
     "outputs": [],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -811,12 +811,12 @@ eternalStorage = [
         "type": "uint256"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -832,12 +832,12 @@ eternalStorage = [
         "type": "bool"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -853,12 +853,12 @@ eternalStorage = [
         "type": "string"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -874,12 +874,12 @@ eternalStorage = [
         "type": "address"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -895,12 +895,12 @@ eternalStorage = [
         "type": "bytes32"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "constant": "true",
+    "constant": true,
     "inputs": [
       {
         "internalType": "bytes32",
@@ -916,7 +916,7 @@ eternalStorage = [
         "type": "bytes"
       }
     ],
-    "payable": "false",
+    "payable": false,
     "stateMutability": "view",
     "type": "function"
   }

@@ -33,6 +33,7 @@ DEFAULT_TIMEOUT = 60
 
 def get_provider_from_uri(uri_string, timeout=DEFAULT_TIMEOUT, batch=False):
     uri = urlparse(uri_string)
+    print("uri: ",uri )
     if uri.scheme == 'file':
         if batch:
             return BatchIPCProvider(uri.path, timeout=timeout)

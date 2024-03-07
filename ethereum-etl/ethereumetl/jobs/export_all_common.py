@@ -316,8 +316,10 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
 def get_type_provider_uri(uri_string):
     uri = urlparse(uri_string)
     infura = 'infura'
-    result = infura in uri.netloc
-    if result: 
+    agd = 'agd'
+    isInfura = infura in uri.netloc
+    isAGD = agd in uri.netloc
+    if isInfura or isAGD: 
         # return PARITY type
         return 'PARITY'
     else: 
