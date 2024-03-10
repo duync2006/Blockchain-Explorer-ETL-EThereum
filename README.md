@@ -23,3 +23,8 @@ Set Your Postgre Database for .env:
 DATABASE_URL = 'postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]'
 DATABASE_URL_FOR_EXTRACT = 'postgresql+pg8000://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]'
 ```
+
+## Run code
+```bash
+npm run dev
+```
