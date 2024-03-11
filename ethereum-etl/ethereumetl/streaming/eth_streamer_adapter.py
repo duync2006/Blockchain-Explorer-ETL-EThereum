@@ -25,6 +25,13 @@ from sqlalchemy import create_engine
 from sqlalchemy import text
 from psycopg2.extras import Json
 
+from hexbytes import HexBytes
+from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_data
+from eth_abi import abi
+from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
+from typing import Any, Dict, cast, Union
+import numpy as np
+import pandas as pd
 from ethereumetl.storageABI import eternalStorage
 import json
 w3 = Web3(Web3.HTTPProvider('https://agd-seed-1.vbchain.vn/'))
@@ -119,7 +126,7 @@ class EthStreamerAdapter:
         if self.node_type == 'PARITY':
             enriched_traces = enrich_traces(blocks, traces) \
                 if EntityType.TRACE in self.entity_types else []
-            print("enriched_traces: ", enriched_traces)
+            # print("enriched_traces: ", enriched_traces)
         else: 
             enriched_traces = enrich_geth_traces(transactions, traces) \
                 if EntityType.TRACE in self.entity_types else []
@@ -185,6 +192,16 @@ class EthStreamerAdapter:
         job.run()
         receipts = exporter.get_items('receipt')
         logs = exporter.get_items('log')
+
+        df_logs = pd.DataFrame(logs)
+        print(df_logs)
+        
+        ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
+        df_logs['data'] = df_logs['data'].apply(lambda x: "0x" + x[2:])
+        df_logs['topics'] = df_logs['topics'].apply(lambda topics: ["0x" + t[2:] for t in topics])
+        df_logs['decode'] = df_logs.apply(lambda row: decode_abi(row, ABIStorage), axis=1)
+        # print( df_logs['decode'])
+        # sssss
         # DECODE LOG HERE 
         #  ------------DECODE LOG HERE---------------
             #  1. contract address, abi ? ---> ?  
@@ -192,52 +209,47 @@ class EthStreamerAdapter:
             #  3. receipt
             #  4. logs =  myContract.events.Transfer().processReceipt(receipt)
        
-        ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
-       
-        # keyEventAbi = w3.keccak(text='EventABI0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef')
-        # print(keyEventAbi)
-        # eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
-        # print('eventABI: ', eventabi)
-        
-        for log in logs: 
-            try:
-                # print('logTopics0:', log['topics'][0])
-                keyEventAbi = w3.keccak(text='EventABI' + log['topics'][0])
-                eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
-                # print("eventabi: ", eventabi)
-                if(eventabi): 
-                    eventabi = eventabi.replace("'", '"')
-                    eventAbiToDict = json.loads(eventabi)
-                    print('eventAbiToDict: ', eventAbiToDict)
-                    data = [t[2:] for t in log['topics']]
-                    data += [log['data'][2:]]
-                    data = "0x" + "".join(data)
-                    # print("data: ", data)
-                    from hexbytes import HexBytes
-                    data = HexBytes(data)  # type: ignore
-                    selector, params = data[:32], data[32:]
+        # print("len logs: ", len(logs))
+        # ssss
+        # --------------------------------------------------
+        # ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
 
-                    from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_data
-                    names = []
-                    types = []
-                    for item in eventAbiToDict:
-                        if 'name' in item and 'type' in item:
-                            names.append(item['name'])
-                            types.append(item['type'])
-                    # print('names: ', names)
-                    # print('types: ', types)
-                    from eth_abi import abi
-                    from typing import Any, Dict, cast, Union
-                    # decodedABI = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
+        # for log in logs: 
+        #     try:
+        #         keyEventAbi = w3.keccak(text='EventABI' + log['topics'][0])
+        #         eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
+        #         if(eventabi): 
+        #             eventabi = eventabi.replace("'", '"')
+        #             eventAbiToDict = json.loads(eventabi)
+        #             print('eventAbiToDict: ', eventAbiToDict)
+        #             data = [t[2:] for t in log['topics']]
+        #             data += [log['data'][2:]]
+        #             data = "0x" + "".join(data)
+        #             # print("data: ", data)
+                    
+        #             data = HexBytes(data)  # type: ignore
+        #             selector, params = data[:32], data[32:]
 
-                    decodedABI = abi.decode(types, cast(HexBytes, params))
-                    # print("decodeABI: ", decodedABI)
-                    from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
-                    normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decodedABI)
-                    normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized ]
-                    print('normalized: ', normalized_decode)
-                    result = dict(zip(names, normalized_decode))
-                    log['decode'] = result
+        #             names = []
+        #             types = []
+        #             for item in eventAbiToDict:
+        #                 if 'name' in item and 'type' in item:
+        #                     names.append(item['name'])
+        #                     types.append(item['type'])
+        #             # print('names: ', names)
+        #             # print('types: ', types)
+                    
+        #             # decodedABI = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
+
+        #             decodedABI = abi.decode(types, cast(HexBytes, params))
+        #             # print("decodeABI: ", decodedABI)
+        #             normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decodedABI)
+        #             normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized ]
+        #             print('normalized: ', normalized_decode)
+        #             result = dict(zip(names, normalized_decode))
+        #             log['decode'] = result
+                # ---------------------------------
+                # end here
                 # contract_address = log['address'];
                 # contract_address_to_checksum = w3.to_checksum_address(contract_address)
                 # with engine.connect() as connection:
@@ -259,9 +271,11 @@ class EthStreamerAdapter:
                 #             result = eventDecoder.decode_log(log)
                 #             log['decode'] = result;
 
-            except:
-                pass
-        return receipts, logs
+            # except:
+            #     pass
+        
+
+        return receipts, df_logs.to_dict(orient = 'records')
 
     def _extract_token_transfers(self, logs):
         exporter = InMemoryItemExporter(item_types=['token_transfer'])
@@ -377,3 +391,27 @@ def sort_by(arr, fields):
     if isinstance(fields, tuple):
         fields = tuple(fields)
     return sorted(arr, key=lambda item: tuple(item.get(f) for f in fields))
+
+
+def decode_abi(row, ABIStorage): 
+    keyEventAbi = w3.keccak(text='EventABI' + row['topics'][0])
+    event_abi = ABIStorage.caller().getStringValue(keyEventAbi)
+    if event_abi:
+        data = [t[2:] for t in row['topics']]
+        data += [row['data'][2:]]
+        data = "0x" + "".join(data)
+        # print("data: ", data)
+        
+        data = HexBytes(data)  # type: ignore
+        selector, params = data[:32], data[32:]
+        event_abi_dict = json.loads(event_abi)
+
+        names, types = zip(*[(item['name'], item['type']) for item in event_abi_dict if 'name' in item and 'type' in item])
+
+        decoded_abi = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
+        normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decoded_abi)
+        normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized]
+
+        return dict(zip(names, normalized_decode))
+    else:
+        return None
