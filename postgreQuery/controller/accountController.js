@@ -447,8 +447,10 @@ const AccountController = {
         });
 
       const addressToCheckSum = await web3.utils.toChecksumAddress(address);
-      const contract = new web3.eth.Contract(minABI, addressToCheckSum);
 
+      const contract = new web3.eth.Contract(minABI, addressToCheckSum);
+      // console.log(contract)
+      
       const stakeHolders = await prisma.token_transfers.findMany({
         where: {
           token_address: address,
@@ -466,8 +468,9 @@ const AccountController = {
       });
 
       const uniqueAddressesArray = Array.from(uniqueAddressesSet);
-      const totalSupply = await contract.methods.totalSupply().call();
-
+      let totalSupply;
+      // const totalSupply = await contract.methods.totalSupply().call();
+      console.log(totalSupply)
       let holders = [];
       const updateHolder = uniqueAddressesArray.map(async (holder) => {
         // console.log(contract)

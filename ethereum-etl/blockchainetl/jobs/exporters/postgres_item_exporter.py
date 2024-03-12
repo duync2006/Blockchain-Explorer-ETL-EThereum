@@ -47,11 +47,10 @@ class PostgresItemExporter:
         items_grouped_by_type = group_by_item_type(items)
         for item_type, insert_stmt in self.item_type_to_insert_stmt_mapping.items():
             item_group = items_grouped_by_type.get(item_type)
-            if item_type == 'log': 
-                print("item_group: ", item_group)
+            
             if item_group:
                 try:
-                    converted_items = list(self.convert_items(item_group))
+                    converted_items = list(self.convert_items(item_group))            
                     with self.engine.connect() as connection:
                         connection.execute(insert_stmt, converted_items)
                         connection.commit()

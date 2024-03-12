@@ -32,6 +32,7 @@ from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from typing import Any, Dict, cast, Union
 import numpy as np
 import pandas as pd
+# from vaex import vaex 
 from ethereumetl.storageABI import eternalStorage
 import json
 w3 = Web3(Web3.HTTPProvider('https://agd-seed-1.vbchain.vn/'))
@@ -193,13 +194,21 @@ class EthStreamerAdapter:
         receipts = exporter.get_items('receipt')
         logs = exporter.get_items('log')
 
+        #  ------------ start
+        print('number logs: ', len(logs))
         df_logs = pd.DataFrame(logs)
         print(df_logs)
         
-        ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
-        df_logs['data'] = df_logs['data'].apply(lambda x: "0x" + x[2:])
-        df_logs['topics'] = df_logs['topics'].apply(lambda topics: ["0x" + t[2:] for t in topics])
-        df_logs['decode'] = df_logs.apply(lambda row: decode_abi(row, ABIStorage), axis=1)
+        if not df_logs.empty:
+            ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
+            df_logs_subset = df_logs[['topics', 'data']]
+            df_logs['decode'] = df_logs_subset.apply(lambda row: decode_abi(row, ABIStorage), axis=1)
+            print(df_logs['decode'])
+            return receipts, df_logs.to_dict(orient = 'records')
+        else:
+            return receipts, logs
+        
+        # ------------ end 
         # print( df_logs['decode'])
         # sssss
         # DECODE LOG HERE 
@@ -275,7 +284,7 @@ class EthStreamerAdapter:
             #     pass
         
 
-        return receipts, df_logs.to_dict(orient = 'records')
+        
 
     def _extract_token_transfers(self, logs):
         exporter = InMemoryItemExporter(item_types=['token_transfer'])
@@ -396,22 +405,33 @@ def sort_by(arr, fields):
 def decode_abi(row, ABIStorage): 
     keyEventAbi = w3.keccak(text='EventABI' + row['topics'][0])
     event_abi = ABIStorage.caller().getStringValue(keyEventAbi)
+    print(event_abi)
     if event_abi:
-        data = [t[2:] for t in row['topics']]
-        data += [row['data'][2:]]
-        data = "0x" + "".join(data)
-        # print("data: ", data)
-        
-        data = HexBytes(data)  # type: ignore
-        selector, params = data[:32], data[32:]
-        event_abi_dict = json.loads(event_abi)
+        try: 
+            data = [t[2:] for t in row['topics']]
+            data += [row['data'][2:]]
+            data = "0x" + "".join(data)
+            # print("data: ", data)
+            
+            data = HexBytes(data)  # type: ignore
+            selector, params = data[:32], data[32:]
+            event_abi_dict = json.loads(event_abi)
 
-        names, types = zip(*[(item['name'], item['type']) for item in event_abi_dict if 'name' in item and 'type' in item])
+            names, types = zip(*[(item['name'], item['type']) for item in event_abi_dict if 'name' in item and 'type' in item])
 
-        decoded_abi = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
-        normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decoded_abi)
-        normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized]
+            decoded_abi = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
+            normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decoded_abi)
+            normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized]
 
-        return dict(zip(names, normalized_decode))
+            # normalize_df = pd.DataFrame(normalized)
+            # normalize_df.apply(lambda row: "0x" + row.hex() if isinstance(row, bytes) else row)
+
+            return dict(zip(names, normalized_decode))
+        except: 
+            return None
     else:
         return None
+
+def convertToHex(normalized): 
+    normalize_df = pd.DataFrame(normalized)
+    normalize_df.apply(lambda row: "0x" + row.hex() if isinstance(row, bytes) else row)

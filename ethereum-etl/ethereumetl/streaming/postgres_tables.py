@@ -21,7 +21,7 @@
 #  SOFTWARE.
 
 from sqlalchemy import Table, Column, Integer, BigInteger, Boolean, String, Numeric, \
-    MetaData, PrimaryKeyConstraint, VARCHAR, TIMESTAMP, Float, JSON
+    MetaData, PrimaryKeyConstraint, VARCHAR, TIMESTAMP, Float, JSON, DATE
 from sqlalchemy.dialects.postgresql import ARRAY
 
 metadata = MetaData()

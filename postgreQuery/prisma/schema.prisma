@@ -19,8 +19,8 @@ model blocks {
   state_root        String?   @db.VarChar(66)
   receipts_root     String?   @db.VarChar(66)
   miner             String?   @db.VarChar(42)
-  difficulty        Decimal?  @db.Decimal(38, 0)
-  total_difficulty  Decimal?  @db.Decimal(38, 0)
+  difficulty        Decimal?  @db.Decimal
+  total_difficulty  Decimal?  @db.Decimal
   size              BigInt?
   extra_data        String?
   gas_limit         BigInt?
@@ -213,30 +213,16 @@ model t1 {
 }
 
 /// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
-model transaction_partition {
-  hash                        String   @db.VarChar(66)
-  nonce                       BigInt?
-  transaction_index           BigInt?
-  from_address                String?  @db.VarChar(42)
-  to_address                  String?  @db.VarChar(42)
-  value                       Decimal? @db.Decimal(38, 0)
-  gas                         BigInt?
-  gas_price                   BigInt?
-  input                       String?
-  receipt_cumulative_gas_used BigInt?
-  receipt_gas_used            BigInt?
-  receipt_contract_address    String?  @db.VarChar(42)
-  receipt_root                String?  @db.VarChar(66)
-  receipt_status              BigInt?
-  block_timestamp             DateTime @db.Timestamp(6)
-  block_number                BigInt?
-  block_hash                  String?  @db.VarChar(66)
-  max_fee_per_gas             BigInt?
-  max_priority_fee_per_gas    BigInt?
-  transaction_type            BigInt?
+model transaction_statistic {
+  block_date        DateTime @id @db.Date
+  total_transaction Int?
 
-  @@id([hash, block_timestamp])
-  @@index([block_timestamp(sort: Desc)], map: "transaction_partition_block_timestamp_index")
-  @@index([from_address, block_timestamp(sort: Desc)], map: "transaction_partition_from_address_block_timestamp_index")
-  @@index([to_address, block_timestamp(sort: Desc)], map: "transaction_partition_to_address_block_timestamp_index")
+  @@index([block_date(sort: Desc)], map: "block_date_index")
+}
+
+model transactions_statistic_in_one_month {
+  block_timestamp   DateTime @id @db.Timestamp(6)
+  total_transaction Int?
+
+  @@index([block_timestamp(sort: Desc)], map: "block_timestamp_transactions_statistic_in_one_month")
 }

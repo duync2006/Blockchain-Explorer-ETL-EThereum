@@ -320,7 +320,6 @@ def get_type_provider_uri(uri_string):
     isInfura = infura in uri.netloc
     isAGD = agd in uri.netloc
     if isInfura or isAGD: 
-        # return PARITY type
         return 'PARITY'
     else: 
         return 'GETH'
