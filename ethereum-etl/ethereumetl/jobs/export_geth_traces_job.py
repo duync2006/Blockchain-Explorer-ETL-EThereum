@@ -65,8 +65,8 @@ class ExportGethTracesJob(BaseJob):
         )
 
     def _export_batch(self, block_number_batch):
-        trace_block_rpc = list(generate_trace_block_by_number_json_rpc(block_number_batch))
-        response = self.batch_web3_provider.make_batch_request(json.dumps(trace_block_rpc))
+        # trace_block_rpc = list(generate_trace_block_by_number_json_rpc(block_number_batch))
+        # response = self.batch_web3_provider.make_batch_request(json.dumps(trace_block_rpc))
 
         # geth_trace_block_rpc = list(generate_geth_trace_by_by_number_json_rpc(block_number_batch))
         # geth_response = self.batch_web3_provider.make_batch_request(json.dumps(geth_trace_block_rpc))
@@ -76,8 +76,8 @@ class ExportGethTracesJob(BaseJob):
         trace_transaction_rpc = list(generate_geth_trace_by_transaction_hash_json_rpc(self.transactions))
         response_1 = self.batch_web3_provider.make_batch_request(json.dumps(trace_transaction_rpc))
         # print('RPC: ', trace_transaction_rpc)
-        print("provider: ", self.batch_web3_provider)
-        print("RESPONSE 1: ", json.dumps(response_1))
+        # print("provider: ", self.batch_web3_provider)
+        # print("RESPONSE 1: ", json.dumps(response_1))
         # print("RESPONSE: ", response)
 
         # for response_item in response:
@@ -102,9 +102,9 @@ class ExportGethTracesJob(BaseJob):
                 break 
             txHash = response_item.get('id')
             traceArray = flattenTraceCalls(response_item)
-            print("TRACE ARRAY: ", traceArray)
+            # print("TRACE ARRAY: ", traceArray)
             geth_traces = self.geth_trace_mapper.array_to_EthGethTrace(traceArray, txHash, response_item['result']['type'])
-            print("geth_traces: ", geth_traces)
+            # print("geth_traces: ", geth_traces)
             calculate_trace_indexes(geth_traces)
             try: 
                 calculate_geth_trace_ids(geth_traces)

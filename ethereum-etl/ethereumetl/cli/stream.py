@@ -76,7 +76,7 @@ def stream(last_synced_block_file, lag, provider_uri, output, start_block, entit
     from blockchainetl.jobs.exporters.converters.list_field_item_converter import ListFieldItemConverter
     from ethereumetl.streaming.postgres_tables import GETH_TRACES, BLOCKS, TRANSACTIONS, LOGS, TOKEN_TRANSFERS, TRACES, TOKENS, CONTRACTS
     item_exporter_to_Postgres = PostgresItemExporter(
-            'postgresql+pg8000://postgres:billboss123@localhost:5432/ETL_Ethereum', item_type_to_insert_stmt_mapping={
+            'postgresql+pg8000://postgres:billboss123@192.168.0.106:5432/ETL_Ethereum', item_type_to_insert_stmt_mapping={
                 'block': create_insert_statement_for_table(BLOCKS),
                 'transaction': create_insert_statement_for_table(TRANSACTIONS),
                 'log': create_insert_statement_for_table(LOGS),
