@@ -45,7 +45,7 @@ services:
       - "3005:3005"
     depends_on:
       - postgres_db
-  
+ 
   decompile-contract-service:
     image: decompile_contract:1.0.0
     container_name: decompile-contract-service
