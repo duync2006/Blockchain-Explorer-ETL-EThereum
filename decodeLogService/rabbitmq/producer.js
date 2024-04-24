@@ -9,7 +9,7 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
     endBlockNumber = endBlockNumber ? endBlockNumber : await web3.eth.getBlockNumber();
 
     const client = await connectDB();
-    const connection = await amqp.connect('amqp://localhost')
+    const connection = await amqp.connect('amqp://rabbitmq')
     const channel = await connection.createChannel();
     channel.assertQueue("logs_queue_lazy_db", {
       durable: true,
