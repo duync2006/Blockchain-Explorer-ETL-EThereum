@@ -53,7 +53,7 @@ class ExportTracesJob(BaseJob):
         self.web3 = web3
 
         # TODO: use batch_size when this issue is fixed https://github.com/paritytech/parity-ethereum/issues/9822
-        self.batch_work_executor = BatchWorkExecutor(1, max_workers)
+        self.batch_work_executor = BatchWorkExecutor(batch_size, max_workers)
         self.item_exporter = item_exporter
 
         self.trace_mapper = EthTraceMapper()
@@ -76,7 +76,7 @@ class ExportTracesJob(BaseJob):
         
         # TODO: Change to len(block_number_batch) > 0 when this issue is fixed
         # https://github.com/paritytech/parity-ethereum/issues/9822
-        assert len(block_number_batch) == 1
+        assert len(block_number_batch) > 0
         block_number = block_number_batch[0]
 
         all_traces = []
@@ -91,7 +91,12 @@ class ExportTracesJob(BaseJob):
 
         # TODO: Change to traceFilter when this issue is fixed
         # https://github.com/paritytech/parity-ethereum/issues/9822
-        json_traces = self.web3.parity.traceBlock(block_number)
+        filter_params = {
+            'fromBlock': hex(block_number_batch[0]),
+            'toBlock': hex(block_number_batch[-1]),
+        }
+
+        json_traces = self.web3.parity.traceFilter(filter_params)
         if json_traces is None:
             raise ValueError('Response from the node is None. Is the node fully synced? Is the node started with tracing enabled? Is trace_block API enabled?')
 

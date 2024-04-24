@@ -41,6 +41,7 @@ class ExportBlocksJob(BaseJob):
             batch_web3_provider,
             max_workers,
             item_exporter,
+            postgres_exporter = None,
             export_blocks=True,
             export_transactions=True):
         validate_range(start_block, end_block)
@@ -51,6 +52,7 @@ class ExportBlocksJob(BaseJob):
 
         self.batch_work_executor = BatchWorkExecutor(batch_size, max_workers)
         self.item_exporter = item_exporter
+        self.postgres_exporter = postgres_exporter
         self.export_blocks = export_blocks
         self.export_transactions = export_transactions
         if not self.export_blocks and not self.export_transactions:
@@ -58,6 +60,7 @@ class ExportBlocksJob(BaseJob):
 
         self.block_mapper = EthBlockMapper()
         self.transaction_mapper = EthTransactionMapper()
+        
 
     def _start(self):
         self.item_exporter.open()
@@ -75,18 +78,29 @@ class ExportBlocksJob(BaseJob):
         # print("RESPONSE:: ", response)
         results = rpc_response_batch_to_results(response)
         blocks = [self.block_mapper.json_dict_to_block(result) for result in results]
+        blocks_dict = [self.block_mapper.block_to_dict(block) for block in blocks]
         for block in blocks:
             self._export_block(block)
-
+        if self.postgres_exporter:
+            self._export_blocks(blocks_dict)
+            self._export_transactions(blocks)
     def _export_block(self, block):
         if self.export_blocks:
             self.item_exporter.export_item(self.block_mapper.block_to_dict(block))
         if self.export_transactions:
             for tx in block.transactions:
-                # print(self.transaction_mapper.transaction_to_dict(tx))
-                # DECODE INPUT TRANSACTION HERE
                 self.item_exporter.export_item(self.transaction_mapper.transaction_to_dict(tx))
-
+                
+    def _export_blocks(self, blocks_dict):
+        self.postgres_exporter.export_items(blocks_dict)
+                
+    def _export_transactions(self, blocks):
+        transactions = []
+        for block in blocks:
+            for tx in block.transactions:
+                transactions.append(self.transaction_mapper.transaction_to_dict(tx))
+        # self.postgres_exporter.export_items(transactions)
+    
     def _end(self):
         self.batch_work_executor.shutdown()
         self.item_exporter.close()

@@ -1,0 +1,43 @@
+BLOCK:   		 FROM    --> TO
+
+------------------------ 8096230 --> 8106229 --------------------------------------------------
+Time to insert block to database:  22.698091745376587
+Time to insert transaction to database:  0.21525120735168457
+Time to insert token_transfer to database:  0.40874314308166504
+Time to insert log to database:  0.06774568557739258
+Time to insert trace to database:  19.998417854309082
+Time to insert token to database:  0.0
+Time to insert contract to database:  0.0
+Time to export 10000 blocks:  50.83898973464966
+
+------------------------ 8106229 --> 8116229 ---------------------------------------------------
+Time to insert block to database:  22.211761951446533
+Time to insert transaction to database:  0.24396777153015137
+Time to insert token_transfer to database:  0.29137372970581055
+Time to insert log to database:  0.09054398536682129
+Time to insert trace to database:  20.66653609275818
+Time to insert token to database:  0.0
+Time to insert contract to database:  0.0
+Time to export 10000 blocks:  50.903319120407104
+
+------------------------ 8116229 --> 8126228 ---------------------------------------------------
+
+Time to insert block to database:  22.002269983291626
+Time to insert transaction to database:  0.17449951171875
+Time to insert token_transfer to database:  0.25763726234436035
+Time to insert log to database:  0.06984710693359375
+Time to insert trace to database:  20.253791093826294
+Time to insert token to database:  0.0
+Time to insert contract to database:  0.0
+Time to export 10000 blocks:  49.36195969581604
+
+------------------------ 8126228 --> 8139114 (latest block: > 12k items) ------------------------
+
+Time to insert block to database:  28.29737424850464
+Time to insert transaction to database:  0.42265868186950684
+Time to insert token_transfer to database:  0.5159339904785156
+Time to insert log to database:  0.10909461975097656
+Time to insert trace to database:  26.015933990478516
+Time to insert token to database:  0.0
+Time to insert contract to database:  0.0
+Time to export 10000 blocks:  63.756235122680664

@@ -28,8 +28,8 @@ from ethereumetl.mappers.contract_mapper import EthContractMapper
 
 from ethereumetl.service.eth_contract_service import EthContractService
 from ethereumetl.utils import to_int_or_none
-
-
+import pika
+import json
 # Extract contracts
 class ExtractContractsJob(BaseJob):
     def __init__(
@@ -40,7 +40,7 @@ class ExtractContractsJob(BaseJob):
             item_exporter,
             node_type):
         self.traces_iterable = traces_iterable
-
+        self.batch_size = batch_size
         self.batch_work_executor = BatchWorkExecutor(batch_size, max_workers)
         self.item_exporter = item_exporter
 
@@ -55,6 +55,7 @@ class ExtractContractsJob(BaseJob):
         self.batch_work_executor.execute(self.traces_iterable, self._extract_contracts)
 
     def _extract_contracts(self, traces):
+        print('traces length:', len(traces))
         for trace in traces:
             trace['status'] = to_int_or_none(trace.get('status'))
             trace['block_number'] = to_int_or_none(trace.get('block_number'))
@@ -70,23 +71,43 @@ class ExtractContractsJob(BaseJob):
             contract_creation_traces = [trace for trace in traces
                                     if trace.get('trace_type') == 'create' and trace.get('to_address') is not None
                                     and len(trace.get('to_address')) > 0 and trace.get('status') == 1]
-        
+        print('contract_creation_traces length ----------> ', len(contract_creation_traces))
         contracts = []
-        for trace in contract_creation_traces:
-            contract = EthContract()
-            contract.address = trace.get('to_address')
-            contract.creator = trace.get('from_address')
-            bytecode = trace.get('output')
-            contract.bytecode = bytecode
-            contract.block_number = trace.get('block_number')
+       
+        try: 
+            # Put to Queue (RABBITMQ)
+            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+            channel = connection.channel()
+            channel.queue_declare(queue = "dissassemble_SC", durable=True, arguments={'x-queue-mode': 'lazy'})
+            
+            # print("logMessages: ", logMessages)
+            for trace in contract_creation_traces:
+                contract = EthContract()
+                contract.address = trace.get('to_address')
+                contract.creator = trace.get('from_address')
+                bytecode = trace.get('output')
+                contract.bytecode = bytecode
+                contract.block_number = trace.get('block_number')
+                contracts.append(contract)
+                temp = {}
+                temp['address'] = contract.address;
+                temp['bytecode'] = bytecode
+                channel.basic_publish(
+                    exchange='',
+                    routing_key='dissassemble_SC',
+                    body=json.dumps(temp),
+                    properties=pika.BasicProperties(delivery_mode=2) 
+                )
+                
+            connection.close()
+        except: 
+            pass
+        
+            # function_sighashes = self.contract_service.get_function_sighashes(bytecode)
+            # contract.function_sighashes = function_sighashes
+            # contract.is_erc20 = self.contract_service.is_erc20_contract(function_sighashes)
+            # contract.is_erc721 = self.contract_service.is_erc721_contract(function_sighashes)
 
-            function_sighashes = self.contract_service.get_function_sighashes(bytecode)
-
-            contract.function_sighashes = function_sighashes
-            contract.is_erc20 = self.contract_service.is_erc20_contract(function_sighashes)
-            contract.is_erc721 = self.contract_service.is_erc721_contract(function_sighashes)
-
-            contracts.append(contract)
         for contract in contracts:
             self.item_exporter.export_item(self.contract_mapper.contract_to_dict(contract))
 

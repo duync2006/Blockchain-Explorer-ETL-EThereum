@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 from collections import defaultdict
-
+import hashlib
 
 def calculate_trace_ids(traces):
     # group by block
@@ -57,7 +57,9 @@ def calculate_geth_trace_ids(traces):
 
 def calculate_transaction_scoped_trace_ids(traces):
     for trace in traces:
-        trace.trace_id = concat(trace.trace_type, trace.transaction_hash, trace_address_to_str(trace.trace_address))
+        trace_id = concat(trace.trace_type, trace.transaction_hash, trace_address_to_str(trace.trace_address))
+        result = hashlib.md5(trace_id.encode())
+        trace.trace_id = result.hexdigest()
 
 
 def calculate_block_scoped_trace_ids(traces):
@@ -75,7 +77,9 @@ def calculate_geth_trace_indexes_for_single_type(traces):
                            key=lambda trace: (trace.from_address, trace.to_address, trace.value))
 
     for index, trace in enumerate(sorted_traces):
-        trace.trace_id = concat(trace.trace_type, trace.block_number, index)
+        trace_id = concat(trace.trace_type, trace.block_number, index)
+        result = hashlib.md5(trace_id.encode())
+        trace.trace_id = result.hexdigest()
 
 
 

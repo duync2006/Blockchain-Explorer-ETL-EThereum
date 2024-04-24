@@ -1,0 +1,24 @@
+# Use an official Node.js runtime as the base image
+FROM node:16.20.0
+
+WORKDIR /postgreQuery
+
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY .env ./.env
+
+RUN npm install
+
+COPY . . 
+
+# ENV DATABASE_URL = "postgresql://postgres:billboss123@localhost:5432/ETL_Ethereum"
+
+# RUN npx prisma db pull
+# RUN npx prisma generate
+# RUN npx prisma migrate dev
+RUN npx prisma generate
+
+
+EXPOSE 3001
+
+CMD ["npm", "run", "dev"]

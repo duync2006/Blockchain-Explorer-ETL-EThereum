@@ -14,4 +14,6 @@ router.get("/total", TransactionController.getTotalNumberTrans);
 
 router.get("/", TransactionController.getAllTransaction);
 
+router.get("/internalTxn/:txHash", TransactionController.getInternalTransaction)
+
 module.exports = router;

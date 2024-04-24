@@ -24,9 +24,6 @@
 from ethereumetl.domain.receipt import EthReceipt
 from ethereumetl.mappers.receipt_log_mapper import EthReceiptLogMapper
 from ethereumetl.utils import hex_to_dec, to_normalized_address, to_float_or_none
-from sqlalchemy import create_engine
-
-engine = create_engine("postgresql+pg8000://postgres:billboss123@localhost:5432/ETL_Ethereum")
 class EthReceiptMapper(object):
     def __init__(self, receipt_log_mapper=None):
         if receipt_log_mapper is None:

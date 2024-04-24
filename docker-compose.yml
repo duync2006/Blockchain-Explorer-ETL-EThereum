@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  postgres_db: 
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      - POSTGRES_PASSWORD=etl777
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=etl_ethereum
+    ports:
+      - "5432:5432"
+    volumes:
+      - C:\postgresLocalStorage:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - C:\Users\NGUYEN CONG DUY\AppData\Roaming\RabbitMQ\db:/var/lib/rabbitmq/
+        - C:\Users\NGUYEN CONG DUY\AppData\Roaming\RabbitMQ\log:/var/log/rabbitmq
+
+  etl-service:
+    image: etl_ethereum:1.0.0
+    container_name: etl-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - //var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - postgres_db
+  # decode-log-service:
+  #   image: decode-service
+  #   container_name: decode-log-service
+  #   ports:
+  #     - "3001:3001" 
+  #   volumes:
+  #     - //var/run/docker.sock:/var/run/docker.sock
+  #   depends_on:
+  #     - postgres_db
+

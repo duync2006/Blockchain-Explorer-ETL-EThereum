@@ -106,7 +106,7 @@ const StatisticController = {
       // const transactions = await prisma.$queryRaw`SELECT * FROM transaction_statistic where block_date >= ${startDate} and block_date <= ${currentDate} order by block_date DESC`
 
       const result = await prisma.$queryRaw`SELECT \
-                  DATE_TRUNC('month', block_date) AS timestamp,\
+                  DATE_TRUNC('quarter', block_date) AS timestamp,\
                   SUM(total_transaction) AS quantity\
               FROM transaction_statistic WHERE block_date >= ${startDate} and block_date <= ${currentDate}\
               GROUP BY timestamp\
