@@ -30,13 +30,15 @@ from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_da
 from eth_abi import abi
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
 from typing import Any, Dict, cast, Union
-import numpy as np
-import pandas as pd
+# import numpy as np
+# import pandas as pd
+import time
+
 # from vaex import vaex 
 from ethereumetl.storageABI import eternalStorage
 import json
 w3 = Web3(Web3.HTTPProvider('https://agd-seed-1.vbchain.vn/'))
-engine = create_engine("postgresql+pg8000://postgres:billboss123@localhost:5432/ETL_Ethereum")
+engine = create_engine("postgresql+pg8000://postgres:billboss123@postgres_db:5432/ETL_Ethereum")
 class EthStreamerAdapter:
     def __init__(
             self,
@@ -62,77 +64,84 @@ class EthStreamerAdapter:
         return int(w3.eth.getBlock("latest").number)
 
     def export_all(self, start_block, end_block):
+        # starts = time.time()
         # Export blocks and transactions
         blocks, transactions = [], []
+        
         if self._should_export(EntityType.BLOCK) or self._should_export(EntityType.TRANSACTION):
             blocks, transactions = self._export_blocks_and_transactions(start_block, end_block)
-            for transaction in transactions:
-                try:
-                    contract_address = transaction['to_address']
-                    contract_address_to_checksum = w3.to_checksum_address(contract_address)
-                    selector = transaction["input"][:10]
-                    with engine.connect() as connection:
-                        query = text('SELECT abi FROM abis WHERE contract_address = :c')
-                        contract_abi = connection.execute(statement=query, parameters=dict(c = contract_address_to_checksum)).mappings().all()
-                        if contract_abi:
-                            pass
-                        else: 
-                            query = text('SELECT * FROM function_signature WHERE selector = :s')
-                            function_signature = connection.execute(statement=query, parameters=dict(s = selector)).mappings().all()
-                            if function_signature:
-                                myContract = w3.eth.contract(address="0x0000000000000000000000000000000000000000", abi=function_signature[0]['inputs'])
-                                functionDecoder = FunctionInputDecoder(myContract)
-                                result = functionDecoder.decode_function_input(transaction["input"])
-                                result["method"] = function_signature[0]["func_name"]
-                                # print("result: ", result)
-                                transaction["decodeInput"] = result
-                except:
-                    pass
+            # for transaction in transactions:
+            #     try:
+            #         contract_address = transaction['to_address']
+            #         contract_address_to_checksum = w3.to_checksum_address(contract_address)
+            #         selector = transaction["input"][:10]
+            #         with engine.connect() as connection:
+            #             query = text('SELECT abi FROM abis WHERE contract_address = :c')
+            #             contract_abi = connection.execute(statement=query, parameters=dict(c = contract_address_to_checksum)).mappings().all()
+            #             if contract_abi:
+            #                 pass
+            #             else: 
+            #                 query = text('SELECT * FROM function_signature WHERE selector = :s')
+            #                 function_signature = connection.execute(statement=query, parameters=dict(s = selector)).mappings().all()
+            #                 if function_signature:
+            #                     myContract = w3.eth.contract(address="0x0000000000000000000000000000000000000000", abi=function_signature[0]['inputs'])
+            #                     functionDecoder = FunctionInputDecoder(myContract)
+            #                     result = functionDecoder.decode_function_input(transaction["input"])
+            #                     result["method"] = function_signature[0]["func_name"]
+            #                     # print("result: ", result)
+            #                     transaction["decodeInput"] = result
+            #     except:
+            #         pass
                     # print(error)
                 
         # Export receipts and logs
+        # enriched_transactions = enrich_transactions(transactions, receipts) \
+        #     if EntityType.TRANSACTION in self.entity_types else []
         receipts, logs = [], []
         if self._should_export(EntityType.RECEIPT) or self._should_export(EntityType.LOG):
             receipts, logs = self._export_receipts_and_logs(transactions)
-            
-            # Put to Queue (RABBITMQ)
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-            channel = connection.channel()
-            channel.queue_declare(queue = "logs_queue_lazy", durable=True, arguments={'x-queue-mode': 'lazy'})
-            
-            logMessages = transformLogsToDict(logs)
-            # print("logMessages: ", logMessages)
-            for message in logMessages:
-                temp = {}
-                temp[message] = logMessages[message]
-                channel.basic_publish(
-                    exchange='',
-                    routing_key='logs_queue_lazy',
-                    body=json.dumps(temp),
-                    properties=pika.BasicProperties(delivery_mode=2) 
-                )
+            try: 
+                # Put to Queue (RABBITMQ)
+                connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+                channel = connection.channel()
+                channel.queue_declare(queue = "decode_log_etl", durable=True, arguments={'x-queue-mode': 'lazy'})
+                
+                logMessages = transformLogsToDict(logs)
+                # print("logMessages: ", logMessages)
+                for message in logMessages:
+                    temp = {}
+                    temp[message] = logMessages[message]
+                    channel.basic_publish(
+                        exchange='',
+                        routing_key='decode_log_etl',
+                        body=json.dumps(temp),
+                        properties=pika.BasicProperties(delivery_mode=2) 
+                    )
 
-            connection.close()
+                connection.close()
+            except: 
+                pass
         # Extract token transfers
         token_transfers = []
         if self._should_export(EntityType.TOKEN_TRANSFER):
             token_transfers = self._extract_token_transfers(logs)
-
+  
         # Export traces
         traces = []
         if self._should_export(EntityType.TRACE):
             traces = self._export_traces(start_block, end_block, transactions)
+        
         if self.node_type == 'PARITY':
             # Export contracts
             contracts = []
             if self._should_export(EntityType.CONTRACT):
                 contracts = self._export_contracts(traces,  self.node_type)
-
+                print('contract: ', contracts)
             # Export tokens
             tokens = []
             if self._should_export(EntityType.TOKEN):
                 tokens = self._extract_tokens(contracts)
-
+        print("Traces length: ", len(traces))
 
         enriched_blocks = blocks \
             if EntityType.BLOCK in self.entity_types else []
@@ -145,7 +154,6 @@ class EthStreamerAdapter:
         if self.node_type == 'PARITY':
             enriched_traces = enrich_traces(blocks, traces) \
                 if EntityType.TRACE in self.entity_types else []
-            # print("enriched_traces: ", enriched_traces)
         else: 
             enriched_traces = enrich_geth_traces(transactions, traces) \
                 if EntityType.TRACE in self.entity_types else []
@@ -177,9 +185,11 @@ class EthStreamerAdapter:
         self.calculate_item_ids(all_items)
         self.calculate_item_timestamps(all_items)
         self.item_exporter.export_items(all_items)
-
+        # print("Time to export 10000 blocks: ", time.time() - starts)
     def _export_blocks_and_transactions(self, start_block, end_block):
+        start_time = time.time()
         blocks_and_transactions_item_exporter = InMemoryItemExporter(item_types=['block', 'transaction'])
+        
         blocks_and_transactions_job = ExportBlocksJob(
             start_block=start_block,
             end_block=end_block,
@@ -187,18 +197,19 @@ class EthStreamerAdapter:
             batch_web3_provider=self.batch_web3_provider,
             max_workers=self.max_workers,
             item_exporter=blocks_and_transactions_item_exporter,
+            postgres_exporter=None,
             export_blocks=self._should_export(EntityType.BLOCK),
             export_transactions=self._should_export(EntityType.TRANSACTION)
         )
         blocks_and_transactions_job.run()
         blocks = blocks_and_transactions_item_exporter.get_items('block')
         transactions = blocks_and_transactions_item_exporter.get_items('transaction')
-        # print("transaction: ", transactions)
-        
+        del blocks_and_transactions_item_exporter.items
+        print("Time to get Block and transactions-----------: %s" % (time.time() - start_time))
         return blocks, transactions
 
     def _export_receipts_and_logs(self, transactions):
-        
+        start_time = time.time()
         exporter = InMemoryItemExporter(item_types=['receipt', 'log'])
         job = ExportReceiptsJob(
             transaction_hashes_iterable=(transaction['hash'] for transaction in transactions),
@@ -212,9 +223,12 @@ class EthStreamerAdapter:
         job.run()
         receipts = exporter.get_items('receipt')
         logs = exporter.get_items('log')
+        del exporter.items
+        print("Log and Receipt --------------> %s" % (time.time() - start_time) )
         return receipts, logs
 
     def _extract_token_transfers(self, logs):
+        start_time = time.time()
         exporter = InMemoryItemExporter(item_types=['token_transfer'])
         job = ExtractTokenTransfersJob(
             logs_iterable=logs,
@@ -223,9 +237,13 @@ class EthStreamerAdapter:
             item_exporter=exporter)
         job.run()
         token_transfers = exporter.get_items('token_transfer')
+        del exporter.items
+        exporter.close()
+        print("Traces --------------> %s" % (time.time() - start_time))
         return token_transfers
 
     def _export_traces(self, start_block, end_block, transactions = []):
+        start_time = time.time()
         if self.node_type == 'PARITY':
             exporter = InMemoryItemExporter(item_types=['trace'])
             job = ExportTracesJob(
@@ -240,6 +258,7 @@ class EthStreamerAdapter:
             
             # Change the key-name here
             traces = exporter.get_items('trace')
+            
         elif self.node_type == 'GETH': 
             exporter = InMemoryItemExporter(item_types=['geth_trace'])
             #  geth trace
@@ -258,10 +277,14 @@ class EthStreamerAdapter:
             traces = exporter.get_items('geth_trace')
         else: 
             raise Exception("Sorry, cannot identify node type is PARITY or GETH")
+        del exporter.items
+        print("Traces --------------> %s" % (time.time() - start_time))
         return traces
 
     def _export_contracts(self, traces, node_type):
+        start_time = time.time()
         exporter = InMemoryItemExporter(item_types=['contract'])
+
         job = ExtractContractsJob(
             traces_iterable=traces,
             batch_size=self.batch_size,
@@ -271,9 +294,12 @@ class EthStreamerAdapter:
         )
         job.run()
         contracts = exporter.get_items('contract')
+        del exporter.items
+        print("Contract --------------> %s" % (time.time() - start_time))
         return contracts
 
     def _extract_tokens(self, contracts):
+        start_time = time.time()
         exporter = InMemoryItemExporter(item_types=['token'])
         job = ExtractTokensJob(
             contracts_iterable=contracts,
@@ -283,6 +309,8 @@ class EthStreamerAdapter:
         )
         job.run()
         tokens = exporter.get_items('token')
+        del exporter.items
+        print("Token --------------> %s" % (time.time() - start_time))
         return tokens
 
     def _should_export(self, entity_type):
@@ -350,9 +378,6 @@ def decode_abi(row, ABIStorage):
             decoded_abi = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
             normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decoded_abi)
             normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized]
-
-            # normalize_df = pd.DataFrame(normalized)
-            # normalize_df.apply(lambda row: "0x" + row.hex() if isinstance(row, bytes) else row)
 
             return dict(zip(names, normalized_decode))
         except: 

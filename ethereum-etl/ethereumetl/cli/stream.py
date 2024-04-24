@@ -76,7 +76,7 @@ def stream(last_synced_block_file, lag, provider_uri, output, start_block, entit
     from blockchainetl.jobs.exporters.converters.list_field_item_converter import ListFieldItemConverter
     from ethereumetl.streaming.postgres_tables import GETH_TRACES, BLOCKS, TRANSACTIONS, LOGS, TOKEN_TRANSFERS, TRACES, TOKENS, CONTRACTS
     item_exporter_to_Postgres = PostgresItemExporter(
-            'postgresql+pg8000://postgres:billboss123@192.168.0.106:5432/ETL_Ethereum', item_type_to_insert_stmt_mapping={
+           output, item_type_to_insert_stmt_mapping={
                 'block': create_insert_statement_for_table(BLOCKS),
                 'transaction': create_insert_statement_for_table(TRANSACTIONS),
                 'log': create_insert_statement_for_table(LOGS),
@@ -131,9 +131,10 @@ from urllib.parse import urlparse
 def get_type_provider_uri(uri_string):
     uri = urlparse(uri_string)
     infura = 'infura'
-    result = infura in uri.netloc
-    if result: 
-        # return PARITY type
+    agd = 'agd'
+    isInfura = infura in uri.netloc
+    isAGD = agd in uri.netloc
+    if isInfura or isAGD: 
         return 'PARITY'
     else: 
         return 'GETH'

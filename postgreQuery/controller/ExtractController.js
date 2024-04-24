@@ -15,59 +15,59 @@ const ExtractController = {
     if (endBlock == undefined) endBlock = await web3.eth.getBlockNumber()
     
     // docker run 
-    const docker = new Docker({socketPath: '/var/run/docker.sock'});
-    docker.run(
-      'etl_ethereum:latest',
-      ['export_all', '-s', `${startBlock}`, '-e', `${endBlock}`, '-b', '10000', '-p', `${provider}`],
-      process.stdout,  // Kết quả stdout sẽ được xuất ra terminal của Node.js
-      {
-          HostConfig: {
-            AutoRemove: true // Auto remove container after run
-          }
-      },
-      function(err, data, container) {
-          if (err) {
-              console.error('Lỗi khi chạy lệnh Docker:', err);
-              response.status(500).send(`Command failed with code ${err.code}`);
-          }
-          // Xử lý kết quả
-          response.status(200).send('Command executed successfully');
-      })
-    } catch (error) {
-      console.error('Lỗi khi chạy lệnh Docker:', error);
-      response.status(500).send(`Command failed with code ${error.code}`);
-    }
-    // local
-    // let path_name = process.cwd()
-    // path_name = path_name + '/ethereum-etl/ethereumetl.py'
-    // const command = 'python'
-    // const args = [path_name,'export_all', '-s', startBlock, '-e', endBlock, '-o', 'output.txt', '-p', provider]
-
-    // const ethereumetlProcess = spawn(command, args)
-
-    // ethereumetlProcess.stdout.on('data', (data) => {
-    //   console.log(`stdout: ${data}`);
-    // })
-
-    // ethereumetlProcess.stderr.on('data', (data) => {
-    //   console.error(`stderr: ${data}`);
-    // })
-
-    // ethereumetlProcess.on('close', (code) => {
-    //   if (code === 0) {
-    //     // Quá trình kết thúc thành công
-    //     console.log('Command executed successfully');
-    //     response.status(200).send('Command executed successfully');
-    //   } else {
-    //     // Quá trình kết thúc với lỗi
-    //     console.error(`Command failed with code ${code}`);
-    //     response.status(500).send(`Command failed with code ${code}`);
-    //   }
-    // });
+    // const docker = new Docker({socketPath: '/var/run/docker.sock'});
+    // docker.run(
+    //   'etl_ethereum:latest',
+    //   ['export_all', '-s', `${startBlock}`, '-e', `${endBlock}`, '-b', '10000', '-p', `${provider}`],
+    //   process.stdout,  // Kết quả stdout sẽ được xuất ra terminal của Node.js
+    //   {
+    //       HostConfig: {
+    //         AutoRemove: true // Auto remove container after run
+    //       }
+    //   },
+    //   function(err, data, container) {
+    //       if (err) {
+    //           console.error('Lỗi khi chạy lệnh Docker:', err);
+    //           response.status(500).send(`Command failed with code ${err.code}`);
+    //       }
+    //       // Xử lý kết quả
+    //       response.status(200).send('Command executed successfully');
+    //   })
     // } catch (error) {
     //   console.error('Lỗi khi chạy lệnh Docker:', error);
     //   response.status(500).send(`Command failed with code ${error.code}`);
     // }
+    // local
+    let path_name = process.cwd()
+    path_name = path_name + '/ethereum-etl/ethereumetl.py'
+    const command = 'python'
+    const args = [path_name,'export_all', '-s', startBlock, '-e', endBlock, '-o', 'output.txt', '-p', provider]
+
+    const ethereumetlProcess = spawn(command, args)
+
+    ethereumetlProcess.stdout.on('data', (data) => {
+      console.log(`stdout: ${data}`);
+    })
+
+    ethereumetlProcess.stderr.on('data', (data) => {
+      console.error(`stderr: ${data}`);
+    })
+
+    ethereumetlProcess.on('close', (code) => {
+      if (code === 0) {
+        // Quá trình kết thúc thành công
+        console.log('Command executed successfully');
+        response.status(200).send('Command executed successfully');
+      } else {
+        // Quá trình kết thúc với lỗi
+        console.error(`Command failed with code ${code}`);
+        response.status(500).send(`Command failed with code ${code}`);
+      }
+    });
+    } catch (error) {
+      console.error('Lỗi khi chạy lệnh Docker:', error);
+      response.status(500).send(`Command failed with code ${error.code}`);
+    }
 },
   extractAutomatic: async(request, response) => {
     try {

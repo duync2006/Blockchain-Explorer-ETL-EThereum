@@ -14,6 +14,8 @@ router.get("/", BlockController.getAllBlocks)
 
 router.get("/latest", BlockController.getDetailLatestBlock)
 
+router.get("/getInternalTxns/:number", BlockController.getBlockInternalTxns)
+
 router.delete("/", BlockController.deleteAll)
 
 module.exports = router

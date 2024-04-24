@@ -3,8 +3,8 @@ const bodyParser = require('body-parser')
 const app = express()
 const port = 3001
 const produceLog = require('../rabbitmq/producer')
-const decodeWorker = require('../rabbitmq/worker')
-
+const decodeWorkerWithDB = require('../rabbitmq/workerWithDB')
+const decodeWorkerWithETL = require('../rabbitmq/worker')
 
 app.use(bodyParser.json())
 app.use(
@@ -32,24 +32,40 @@ app.post('/produceLog', async(requese, response) => {
     const producer = await produceLog(startBlockNumber, endBlockNumber, options)
     response.status(200).send('OK')
   } catch (error) {
-
     console.log(error)
     response.status(500).send('Failed')
-    
   }
   
 })
-app.get('/createWorker', async(req, res) => {
+app.get('/createWorkerWithDB', async(req, res) => {
   try {
-    console.log('hello')
-    const worker1 = await decodeWorker();
+    const node = Number(req.query.node)
+    const limitMessage = Number(req.query.limitMessage)
+    console.log(node)
+    console.log(limitMessage)
+    const worker1 = await decodeWorkerWithDB(node, limitMessage);
     res.status(200).send("OKE")    
   } catch (error) {
     console.error(error)
     res.status(500).send('FAILED')
   }
-  // const producer = await produceLog(startBlockNumber, endBlockNumber)
 })
+
+
+app.get('/createWorkerWithETL', async(req, res) => {
+  try {
+    const node = Number(req.query.node)
+    const limitMessage = Number(req.query.limitMessage)
+    console.log(node)
+    console.log(limitMessage)
+    const worker1 = await decodeWorkerWithETL(node, limitMessage);
+    res.status(200).send("OKE")    
+  } catch (error) {
+    console.error(error)
+    res.status(500).send('FAILED')
+  }
+})
+
 
 
 app.listen(port, () => {

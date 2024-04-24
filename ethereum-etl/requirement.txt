@@ -2,3 +2,6 @@ sqlalchemy_utils
 psycopg2
 numpy
 pandas
+flask
+web3
+pika

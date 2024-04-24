@@ -6,6 +6,8 @@ router.get('/', ContractController.getAll)
 
 router.get('/:address', ContractController.getContract)
 
+router.get('/contractInternalTxns/:address', ContractController.getContractInternalTxns)
+
 router.post('/addContractName', ContractController.setContractName);
 
 router.get('/bytecode/:address', ContractController.getByteCode)

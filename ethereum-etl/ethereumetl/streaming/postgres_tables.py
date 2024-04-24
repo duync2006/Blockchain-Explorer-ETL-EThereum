@@ -95,7 +95,6 @@ LOGS = Table(
     Column('block_timestamp', TIMESTAMP),
     Column('block_number', BigInteger),
     Column('block_hash', String),
-    Column('decode', JSON),
 )
 
 TOKEN_TRANSFERS = Table(

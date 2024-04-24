@@ -3,7 +3,7 @@ const contractAddress = require('../Service/contract_address.json')
 const abi = require('../Service/abi.json')
 const connectDB = require('../Service/dbConfig')
 var amqp = require('amqplib');
-var queue = 'logs_queue_lazy';
+var queue = 'logs_queue_lazy_db';
 
 async function decodeLogWorker(nodetype = 1, messageLimit = 50) {
   const client = await connectDB();
@@ -34,9 +34,10 @@ channel.consume(queue, async function(msg) {
       const keyEventAbi = web3.utils.soliditySha3('EventABI' + topic0);
       // ERC20 vs 721
       // Divide RPC
-      const event_abi = JSON.parse(await contract.methods.getStringValue(keyEventAbi).call());
-      // console.log(event_abi)
-      if (event_abi) {
+      const eventABIString = await contract.methods.getStringValue(keyEventAbi).call()
+      if (eventABIString) {
+      const event_abi = JSON.parse(eventABIString);
+      console.log(event_abi)
         // decode log 
         const specialTopics = ['0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925', '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef']
         if (specialTopics.includes(topic0)
@@ -45,7 +46,6 @@ channel.consume(queue, async function(msg) {
               console.log("event_abi: ", event_abi)
             }
         try {
-          
           const decodeLog = await web3.eth.abi.decodeLog(event_abi, element.data, [element.topic1, element.topic2, element.topic3])
           const decodeData = {};
           event_abi.map((ele) => {
@@ -61,7 +61,7 @@ channel.consume(queue, async function(msg) {
       } else {
         const query = `UPDATE logs SET decode_failed = true, is_decoded = true WHERE log_index = ${element.log_index} AND transaction_hash = '${element.transaction_hash}'::text`
         await client.query(query)
-        console.error(`Event ABI Not Found with log_index = ${element.log_index} and hash = ${element.transaction_hash}`)
+        console.error(`Event ABI Not Found with log_index = ${element.log_index} and hash = ${element.transaction_hash} and EventABI = ${eventABIString}`)
       }
     }))
     // ---------------BULK UPDATE-------------------
@@ -89,10 +89,10 @@ channel.consume(queue, async function(msg) {
 },
 {
   noAck: false
-});  
+}); 
 }
 
-decodeLogWorker(3, 50)
+decodeLogWorker(1, 50)
 
 module.exports = decodeLogWorker;
 

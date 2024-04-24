@@ -130,6 +130,21 @@ const TransactionController = {
       console.log(error)
       res.status(500).send(error)
     }
+  },
+  getInternalTransaction: async(req, res) => {
+    try {
+      const limit = Number(req.query.limit)
+      const page = Number(req.query.page)
+      const hash = req.params.txHash
+      const internalTrans = await prisma.$queryRaw`SELECT trace_address, from_address, to_address, value, gas FROM traces
+      where transaction_hash = ${hash} and not trace_address = '{}'
+      OFFSET ${(page-1)*limit} LIMIT ${limit}`
+      res.status(200).send(toObject(internalTrans))
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error)
+    }
+
   }
 }
 

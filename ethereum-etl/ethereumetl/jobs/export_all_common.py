@@ -62,34 +62,50 @@ def extract_csv_column_unique(input, output, column):
                 continue
             seen.add(row[column])
             output_file.write(row[column] + '\n')
-
+            
+            
+from ethereumetl.streaming.eth_streamer_adapter import EthStreamerAdapter
+from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
+from blockchainetl.streaming.postgres_utils import create_insert_statement_for_table
+from blockchainetl.jobs.exporters.converters.unix_timestamp_item_converter import UnixTimestampItemConverter
+from blockchainetl.jobs.exporters.converters.int_to_decimal_item_converter import IntToDecimalItemConverter
+from blockchainetl.jobs.exporters.converters.list_field_item_converter import ListFieldItemConverter
+from ethereumetl.streaming.postgres_tables import GETH_TRACES, BLOCKS, TRANSACTIONS, LOGS, TOKEN_TRANSFERS, TRACES, TOKENS, CONTRACTS
 
 def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_size):
-    # starts = time()
     for batch_start_block, batch_end_block, partition_dir in partitions:
+        # # # start # # #
+        # start_time = time()
+        # padded_batch_start_block = str(batch_start_block).zfill(8)
+        # padded_batch_end_block = str(batch_end_block).zfill(8)
+        # blocks_and_transactions_item_exporter = InMemoryItemExporter(item_types=['block', 'transaction'])
+        # job = ExportBlocksJob(
+        #     start_block=batch_start_block,
+        #     end_block=batch_end_block,
+        #     batch_size=batch_size,
+        #     batch_web3_provider=ThreadLocalProxy(lambda: get_provider_from_uri(provider_uri, batch=True)),
+        #     max_workers=max_workers,
+        #     item_exporter=item_exporter_to_Postgres,
+        #     export_blocks=True,
+        #     export_transactions=True)
+        # job.run()
 
-        from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
-        from blockchainetl.streaming.postgres_utils import create_insert_statement_for_table
-        from blockchainetl.jobs.exporters.converters.unix_timestamp_item_converter import UnixTimestampItemConverter
-        from blockchainetl.jobs.exporters.converters.int_to_decimal_item_converter import IntToDecimalItemConverter
-        from blockchainetl.jobs.exporters.converters.list_field_item_converter import ListFieldItemConverter
-        from ethereumetl.streaming.postgres_tables import GETH_TRACES, BLOCKS, TRANSACTIONS, LOGS, TOKEN_TRANSFERS, TRACES, TOKENS, CONTRACTS
         item_exporter_to_Postgres = PostgresItemExporter(
-            'postgresql+pg8000://postgres:etl777@localhost:5432/etl_ethereum', item_type_to_insert_stmt_mapping={
-                'block': create_insert_statement_for_table(BLOCKS),
-                'transaction': create_insert_statement_for_table(TRANSACTIONS),
-                'log': create_insert_statement_for_table(LOGS),
-                'token_transfer': create_insert_statement_for_table(TOKEN_TRANSFERS),
-                'trace': create_insert_statement_for_table(TRACES),
-                'geth_trace': create_insert_statement_for_table(GETH_TRACES),
-                'token': create_insert_statement_for_table(TOKENS),
-                'contract': create_insert_statement_for_table(CONTRACTS),
-            },
-        converters=[UnixTimestampItemConverter(), IntToDecimalItemConverter(),
-                        ListFieldItemConverter('topics', 'topic', fill=4)])
-        
-        from ethereumetl.streaming.eth_streamer_adapter import EthStreamerAdapter
-        
+    'postgresql+pg8000://postgres:etl777@postgres_db:5432/etl_ethereum', item_type_to_insert_stmt_mapping={
+        'block': create_insert_statement_for_table(BLOCKS),
+        'transaction': create_insert_statement_for_table(TRANSACTIONS),
+        'log': create_insert_statement_for_table(LOGS),
+        'token_transfer': create_insert_statement_for_table(TOKEN_TRANSFERS),
+        'trace': create_insert_statement_for_table(TRACES),
+        'geth_trace': create_insert_statement_for_table(GETH_TRACES),
+        'token': create_insert_statement_for_table(TOKENS),
+        'contract': create_insert_statement_for_table(CONTRACTS),
+    },
+converters=[UnixTimestampItemConverter(), IntToDecimalItemConverter(),
+                ListFieldItemConverter('topics', 'topic', fill=4)])
+
+
+
         node_type = get_type_provider_uri(provider_uri)
         
         Exporter = EthStreamerAdapter(
@@ -99,9 +115,9 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
             max_workers=max_workers,
             node_type=node_type
         )
-
+        starts = time()
         Exporter.export_all(batch_start_block, batch_end_block)
-
+        print("Time to export 10000 blocks: ", time() - starts)
 def get_type_provider_uri(uri_string):
     uri = urlparse(uri_string)
     infura = 'infura'

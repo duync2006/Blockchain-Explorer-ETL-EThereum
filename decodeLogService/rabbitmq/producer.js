@@ -11,7 +11,7 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
     const client = await connectDB();
     const connection = await amqp.connect('amqp://localhost')
     const channel = await connection.createChannel();
-    channel.assertQueue("logs_queue_lazy", {
+    channel.assertQueue("logs_queue_lazy_db", {
       durable: true,
       queueMode: 'lazy'
     })
@@ -40,16 +40,16 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
       temp[logs] = groupedObject[logs];
       console.log('buffer: ', Buffer.from(JSON.stringify(temp)))
       // for (let i = 0; i <= 30; i++)
-      channel.sendToQueue('logs_queue_lazy', Buffer.from(JSON.stringify(temp)), {persistent: true})
+      channel.sendToQueue('logs_queue_lazy_db', Buffer.from(JSON.stringify(temp)), {persistent: true})
       temp = {};
       console.log(" [x] Sent '%s'", logs);
     }
     console.log('Number logs: ', log_data.rows.length)
     } catch (error) {
       console.error(error)
-    } 
+    }
 }
-produceLog(0, 8000000, 0)
+produceLog(0, 9000000, 0)
   // produceLog(7001350, 7009000, 1)
 // setTimeout(() => {
 //   produceLog(0, 7009000)
