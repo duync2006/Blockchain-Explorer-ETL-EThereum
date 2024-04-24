@@ -1,5 +1,5 @@
 import logging
-
+import pika 
 from blockchainetl.jobs.exporters.console_item_exporter import ConsoleItemExporter
 from blockchainetl.jobs.exporters.in_memory_item_exporter import InMemoryItemExporter
 from ethereumetl.enumeration.entity_type import EntityType
@@ -94,7 +94,25 @@ class EthStreamerAdapter:
         receipts, logs = [], []
         if self._should_export(EntityType.RECEIPT) or self._should_export(EntityType.LOG):
             receipts, logs = self._export_receipts_and_logs(transactions)
+            
+            # Put to Queue (RABBITMQ)
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            channel = connection.channel()
+            channel.queue_declare(queue = "logs_queue_lazy", durable=True, arguments={'x-queue-mode': 'lazy'})
+            
+            logMessages = transformLogsToDict(logs)
+            # print("logMessages: ", logMessages)
+            for message in logMessages:
+                temp = {}
+                temp[message] = logMessages[message]
+                channel.basic_publish(
+                    exchange='',
+                    routing_key='logs_queue_lazy',
+                    body=json.dumps(temp),
+                    properties=pika.BasicProperties(delivery_mode=2) 
+                )
 
+            connection.close()
         # Extract token transfers
         token_transfers = []
         if self._should_export(EntityType.TOKEN_TRANSFER):
@@ -180,6 +198,7 @@ class EthStreamerAdapter:
         return blocks, transactions
 
     def _export_receipts_and_logs(self, transactions):
+        
         exporter = InMemoryItemExporter(item_types=['receipt', 'log'])
         job = ExportReceiptsJob(
             transaction_hashes_iterable=(transaction['hash'] for transaction in transactions),
@@ -193,98 +212,7 @@ class EthStreamerAdapter:
         job.run()
         receipts = exporter.get_items('receipt')
         logs = exporter.get_items('log')
-
-        #  ------------ start
-        print('number logs: ', len(logs))
-        df_logs = pd.DataFrame(logs)
-        print(df_logs)
-        
-        if not df_logs.empty:
-            ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
-            df_logs_subset = df_logs[['topics', 'data']]
-            df_logs['decode'] = df_logs_subset.apply(lambda row: decode_abi(row, ABIStorage), axis=1)
-            print(df_logs['decode'])
-            return receipts, df_logs.to_dict(orient = 'records')
-        else:
-            return receipts, logs
-        
-        # ------------ end 
-        # print( df_logs['decode'])
-        # sssss
-        # DECODE LOG HERE 
-        #  ------------DECODE LOG HERE---------------
-            #  1. contract address, abi ? ---> ?  
-            #  2. tx_hash receipt.transaction_hash PASS
-            #  3. receipt
-            #  4. logs =  myContract.events.Transfer().processReceipt(receipt)
-       
-        # print("len logs: ", len(logs))
-        # ssss
-        # --------------------------------------------------
-        # ABIStorage = w3.eth.contract(address = '0x00ae63e10e63792a8A063D36667bB870a47B4336', abi = eternalStorage)
-
-        # for log in logs: 
-        #     try:
-        #         keyEventAbi = w3.keccak(text='EventABI' + log['topics'][0])
-        #         eventabi = ABIStorage.caller().getStringValue(keyEventAbi)
-        #         if(eventabi): 
-        #             eventabi = eventabi.replace("'", '"')
-        #             eventAbiToDict = json.loads(eventabi)
-        #             print('eventAbiToDict: ', eventAbiToDict)
-        #             data = [t[2:] for t in log['topics']]
-        #             data += [log['data'][2:]]
-        #             data = "0x" + "".join(data)
-        #             # print("data: ", data)
-                    
-        #             data = HexBytes(data)  # type: ignore
-        #             selector, params = data[:32], data[32:]
-
-        #             names = []
-        #             types = []
-        #             for item in eventAbiToDict:
-        #                 if 'name' in item and 'type' in item:
-        #                     names.append(item['name'])
-        #                     types.append(item['type'])
-        #             # print('names: ', names)
-        #             # print('types: ', types)
-                    
-        #             # decodedABI = ABIStorage.web3.codec.decode(types, cast(HexBytes, params))
-
-        #             decodedABI = abi.decode(types, cast(HexBytes, params))
-        #             # print("decodeABI: ", decodedABI)
-        #             normalized = map_abi_data(BASE_RETURN_NORMALIZERS, types, decodedABI)
-        #             normalized_decode = ["0x" + n.hex() if isinstance(n, bytes) else n for n in normalized ]
-        #             print('normalized: ', normalized_decode)
-        #             result = dict(zip(names, normalized_decode))
-        #             log['decode'] = result
-                # ---------------------------------
-                # end here
-                # contract_address = log['address'];
-                # contract_address_to_checksum = w3.to_checksum_address(contract_address)
-                # with engine.connect() as connection:
-                #     query = text('SELECT abi FROM abis WHERE contract_address = :c')
-                #     contract_abi = connection.execute(statement=query, parameters=dict(c = contract_address_to_checksum)).mappings().all()
-                #     if contract_abi: 
-                #         myContract = w3.eth.contract(address=contract_address_to_checksum, abi=contract_abi[0]['abi']) 
-                #         eventDecoder = EventLogDecoder(myContract)
-                        # result = eventDecoder.decode_log(log)
-                #         log['decode'] = result;
-                #     else: 
-                #         query = text('SELECT * FROM event_signatures WHERE topic_0 = :t')
-                #         topic_0 = log['topics'][0]
-                #         event_signatures = connection.execute(statement=query, parameters=dict(t = topic_0)).mappings().all()
-                #         if event_signatures:
-                #             inputs_array = event_signatures[0]['inputs']
-                #             myContract = w3.eth.contract(address="0x0000000000000000000000000000000000000000", abi=event_signatures[0]['inputs'])
-                #             eventDecoder = EventLogDecoder(myContract)
-                #             result = eventDecoder.decode_log(log)
-                #             log['decode'] = result;
-
-            # except:
-            #     pass
-        
-
-        
+        return receipts, logs
 
     def _extract_token_transfers(self, logs):
         exporter = InMemoryItemExporter(item_types=['token_transfer'])
@@ -435,3 +363,13 @@ def decode_abi(row, ABIStorage):
 def convertToHex(normalized): 
     normalize_df = pd.DataFrame(normalized)
     normalize_df.apply(lambda row: "0x" + row.hex() if isinstance(row, bytes) else row)
+    
+    
+def transformLogsToDict(logs): 
+    logs_dict = {}
+    for log in logs: 
+        if log['transaction_hash'] not in logs_dict: 
+            logs_dict[log['transaction_hash']] = [log]
+        else: 
+            logs_dict[log['transaction_hash']].append(log)
+    return logs_dict

@@ -4,7 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = "postgresql://postgres:etl777@postgres_db:5432/etl_ethereum"
+  // url      = "postgresql://postgres:billboss123@localhost:5432/ETL_Ethereum"
+  
 }
 
 model blocks {
@@ -127,6 +129,7 @@ model traces {
   @@index([block_timestamp(sort: Desc)], map: "traces_block_timestamp_index")
   @@index([from_address, block_timestamp(sort: Desc)], map: "traces_from_address_block_timestamp_index")
   @@index([to_address, block_timestamp(sort: Desc)], map: "traces_to_address_block_timestamp_index")
+  @@index([block_number(sort: Desc)], map: "traces_block_number_index")
 }
 
 model transactions {
@@ -204,14 +207,6 @@ model geth_traces {
   @@ignore
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model t1 {
-  id       Int?
-  year_col Int?
-
-  @@ignore
-}
-
 /// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
 model transaction_statistic {
   block_date        DateTime @id @db.Date
@@ -225,4 +220,10 @@ model transactions_statistic_in_one_month {
   total_transaction Int?
 
   @@index([block_timestamp(sort: Desc)], map: "block_timestamp_transactions_statistic_in_one_month")
+}
+
+model transaction_statistic_in_one_year {
+  year               Int  @id
+  quarter            Int?
+  total_transactions Int?
 }

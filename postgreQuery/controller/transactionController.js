@@ -120,7 +120,7 @@ const TransactionController = {
       const page = parseInt(req.query.page || 1)
 
       const trans = await prisma.transactions.findMany({
-        orderBy: { block_number : 'desc'},
+        orderBy: { block_timestamp : 'desc'},
         skip: (page - 1) * perPage,
         take: perPage
       })

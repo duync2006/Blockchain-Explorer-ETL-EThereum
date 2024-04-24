@@ -47,7 +47,7 @@ class PostgresItemExporter:
         items_grouped_by_type = group_by_item_type(items)
         for item_type, insert_stmt in self.item_type_to_insert_stmt_mapping.items():
             item_group = items_grouped_by_type.get(item_type)
-            
+            # if item_type is not 'log':
             if item_group:
                 try:
                     converted_items = list(self.convert_items(item_group))            
@@ -63,11 +63,6 @@ class PostgresItemExporter:
 
     def create_engine(self):
         engine = create_engine(self.connection_url, echo=self.print_sql, pool_recycle=3600)
-        if not database_exists(self.connection_url):
-            print("NOT EXIST DATABASE")
-        else:
-            print("Exist database")
-
         return engine
 
     def close(self):
