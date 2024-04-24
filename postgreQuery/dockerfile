@@ -5,20 +5,14 @@ WORKDIR /postgreQuery
 
 COPY package*.json ./
 COPY prisma ./prisma/
-COPY .env ./.env
+COPY .env ./
 
 RUN npm install
 
 COPY . . 
 
-# ENV DATABASE_URL = "postgresql://postgres:billboss123@localhost:5432/ETL_Ethereum"
-
-# RUN npx prisma db pull
-# RUN npx prisma generate
-# RUN npx prisma migrate dev
 RUN npx prisma generate
 
-
-EXPOSE 3001
+EXPOSE 3000
 
 CMD ["npm", "run", "dev"]

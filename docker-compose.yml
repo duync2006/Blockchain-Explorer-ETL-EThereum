@@ -28,17 +28,21 @@ services:
     container_name: etl-service
     ports:
       - "5000:5000"
-    volumes:
-      - //var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - postgres_db
-  # decode-log-service:
-  #   image: decode-service
-  #   container_name: decode-log-service
-  #   ports:
-  #     - "3001:3001" 
-  #   volumes:
-  #     - //var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - postgres_db
+  explorer_service:
+    image: explorer_service:1.0.0
+    container_name: explorer_service
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres_db
+  
+  decode-log-service:
+    image: decode_log:1.0.0
+    container_name: decode-log-service
+    ports:
+      - "3005:3005"
+    depends_on:
+      - postgres_db
 
