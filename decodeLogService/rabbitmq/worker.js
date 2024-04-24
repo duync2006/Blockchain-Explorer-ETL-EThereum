@@ -15,7 +15,7 @@ async function decodeLogWorker(nodetype = 1, messageLimit = 50) {
     nodetype == 1 ? web3_node_1 : nodetype == 2 ? web3_node_2 : web3_node_3;
   const contract = new web3.eth.Contract(abi, contractAddress.address);
   // const connection = await amqp.connect('amqp://user:password@localhost:5672')
-  const connection = await amqp.connect("amqp://rabbitmq:15672");
+  const connection = await amqp.connect("amqp://rabbitmq");
   const channel = await connection.createChannel();
   channel.assertQueue(queue, {
     durable: true,

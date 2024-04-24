@@ -9,7 +9,7 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
     endBlockNumber = endBlockNumber ? endBlockNumber : await web3.eth.getBlockNumber();
 
     const client = await connectDB();
-    const connection = await amqp.connect('amqp://rabbitmq:15672')
+    const connection = await amqp.connect('amqp://rabbitmq')
     const channel = await connection.createChannel();
     channel.assertQueue("logs_queue_lazy_db", {
       durable: true,
@@ -49,7 +49,7 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
       console.error(error)
     }
 }
-produceLog(0, 9000000, 0)
+// produceLog(0, 9000000, 0)
   // produceLog(7001350, 7009000, 1)
 // setTimeout(() => {
 //   produceLog(0, 7009000)
