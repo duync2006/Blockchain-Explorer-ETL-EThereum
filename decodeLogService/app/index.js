@@ -5,6 +5,7 @@ const port = 3001
 const produceLog = require('../rabbitmq/producer')
 const decodeWorkerWithDB = require('../rabbitmq/workerWithDB')
 const decodeWorkerWithETL = require('../rabbitmq/worker')
+const { web3_node_1, web3_node_2, web3_node_3 } = require('../Service/web3Config')
 
 app.use(bodyParser.json())
 app.use(
@@ -70,4 +71,7 @@ app.get('/createWorkerWithETL', async(req, res) => {
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`)
+  decodeWorkerWithETL(web3_node_1, 50)
+  decodeWorkerWithETL(web3_node_2, 50)
+  decodeWorkerWithETL(web3_node_3, 50)
 })

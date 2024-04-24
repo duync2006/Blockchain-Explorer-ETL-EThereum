@@ -1,10 +1,10 @@
 import pika
 import json
+import sys
 from eth_utils import function_signature_to_4byte_selector
 from ethereum_dasm.evmdasm import EvmCode, Contract
 
-def get_function_sighash(signature):
-    return '0x' + function_signature_to_4byte_selector(signature).hex()
+
 
 class ContractWrapper:
     def __init__(self, sighashes):
@@ -16,6 +16,11 @@ class ContractWrapper:
 
     def implements_any_of(self, *function_signatures):
         return any(self.implements(function_signature) for function_signature in function_signatures)
+
+
+
+def get_function_sighash(signature):
+    return '0x' + function_signature_to_4byte_selector(signature).hex()
 
 def is_erc20_contract(function_sighashes):
   c = ContractWrapper(function_sighashes)
@@ -74,14 +79,16 @@ def decompile(ch, method, properties, body):
 
     except:
       pass
+    
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-channel = connection.channel()
-# channel.basic_qos(prefetch_count=50)
-channel.queue_declare(queue = "decode_log_etl", durable=True, arguments={'x-queue-mode': 'lazy'})
+def consume():
+    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+    channel = connection.channel()
+    # channel.basic_qos(prefetch_count=50)
+    channel.queue_declare(queue = "dissassemble_SC", durable=True, arguments={'x-queue-mode': 'lazy'})
 
-# channel.basic_qos(prefetch_count=1)
-channel.basic_consume(queue='dissassemble_SC', on_message_callback=decompile)
+    # channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue='dissassemble_SC', on_message_callback=decompile)
 
-channel.start_consuming()
+    channel.start_consuming()
