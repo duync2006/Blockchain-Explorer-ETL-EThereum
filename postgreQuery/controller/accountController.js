@@ -1,4 +1,3 @@
-const { start } = require("postgresql");
 const prisma = require("../config");
 const web3 = require("../web3");
 

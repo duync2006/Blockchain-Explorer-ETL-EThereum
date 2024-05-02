@@ -18,26 +18,27 @@ from ethereumetl.web3_utils import build_web3
 from ethereumetl.jobs.export_geth_traces_job import ExportGethTracesJob
 
 from web3 import Web3
-from ethereumetl.mappers.event_decoder import EventLogDecoder
-from ethereumetl.mappers.function_decoder import FunctionInputDecoder
-from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
-from sqlalchemy import create_engine
-from sqlalchemy import text
-from psycopg2.extras import Json
+# from ethereumetl.mappers.event_decoder import EventLogDecoder
+# from ethereumetl.mappers.function_decoder import FunctionInputDecoder
+# from blockchainetl.jobs.exporters.postgres_item_exporter import PostgresItemExporter
+# from sqlalchemy import create_engine
+# from sqlalchemy import text
+# from psycopg2.extras import Json
 
 from hexbytes import HexBytes
-from web3._utils.abi import get_abi_input_names, get_abi_input_types, map_abi_data
-from eth_abi import abi
+from web3._utils.abi import map_abi_data
+# from eth_abi import abi
 from web3._utils.normalizers import BASE_RETURN_NORMALIZERS
-from typing import Any, Dict, cast, Union
-# import numpy as np
-# import pandas as pd
+from typing import cast
 import time
 
-# from vaex import vaex 
 from ethereumetl.storageABI import eternalStorage
 import json
 w3 = Web3(Web3.HTTPProvider('https://agd-seed-1.vbchain.vn/'))
+from dotenv import load_dotenv
+import os 
+load_dotenv()
+
 class EthStreamerAdapter:
     def __init__(
             self,
@@ -101,7 +102,7 @@ class EthStreamerAdapter:
             receipts, logs = self._export_receipts_and_logs(transactions)
             try: 
                 # Put to Queue (RABBITMQ)
-                connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+                connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("RABBITMQ")))
                 channel = connection.channel()
                 channel.queue_declare(queue = "decode_log_etl", durable=True, arguments={'x-queue-mode': 'lazy'})
                 

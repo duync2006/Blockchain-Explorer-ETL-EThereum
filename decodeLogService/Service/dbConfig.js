@@ -1,13 +1,8 @@
 const { Client } = require('pg');
-
+require('dotenv').config()
 async function connect() {
   const client = new Client({
-    // user: 'postgres',
-    // password: 'etl777',
-    // host: '172.17.0.2',
-    // port: '5432',
-    // database: 'etl_ethereum',
-    connectionString: 'postgresql://postgres:etl777@postgres_db:5432/etl_ethereum'
+    connectionString: process.env.DATABASE_URL
   });
   try {
     await client.connect()

@@ -30,6 +30,10 @@ from ethereumetl.service.eth_contract_service import EthContractService
 from ethereumetl.utils import to_int_or_none
 import pika
 import json
+from dotenv import load_dotenv
+import os 
+load_dotenv()
+
 # Extract contracts
 class ExtractContractsJob(BaseJob):
     def __init__(
@@ -76,7 +80,7 @@ class ExtractContractsJob(BaseJob):
        
         try: 
             # Put to Queue (RABBITMQ)
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            connection = pika.BlockingConnection(pika.ConnectionParameters(os.getenv("RABBITMQ")))
             channel = connection.channel()
             channel.queue_declare(queue = "dissassemble_SC", durable=True, arguments={'x-queue-mode': 'lazy'})
             

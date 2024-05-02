@@ -1,15 +1,15 @@
-
+require('dotenv').config()
 var amqp = require('amqplib');
 const connectDB = require('../Service/dbConfig')
 const web3 = require('../Service/web3Config')
-
+const rabbitmq = process.env.RABBITMQ
 async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
   try {
     startBlockNumber = startBlockNumber ? startBlockNumber : 0;
     endBlockNumber = endBlockNumber ? endBlockNumber : await web3.eth.getBlockNumber();
 
     const client = await connectDB();
-    const connection = await amqp.connect('amqp://rabbitmq')
+    const connection = await amqp.connect(`amqp://${rabbitmq}`)
     const channel = await connection.createChannel();
     channel.assertQueue("decode_log_db", {
       durable: true,

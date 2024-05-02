@@ -1,4 +1,3 @@
-const { model } = require('mongoose')
 const prisma = require('../config')
 
 const DeleteController = {

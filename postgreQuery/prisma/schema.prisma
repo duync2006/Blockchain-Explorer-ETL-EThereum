@@ -4,9 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url         = env("DATABASE_URL_LOCALHOST")
-  // url      = "postgresql://postgres:billboss123@localhost:5432/ETL_Ethereum"
-  // url      = "postgresql://postgres:etl777@postgres_db:5432/etl_ethereum"
+  url         = env("DATABASE_URL")
 }
 
 model blocks {

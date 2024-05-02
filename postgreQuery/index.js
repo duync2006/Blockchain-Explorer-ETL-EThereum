@@ -60,7 +60,6 @@ app.get('/', (request, response) => {
 
 app.use("/blocks", BlockRoute);
 app.use("/transactions", TransactionRoute)
-// app.use("/extract", ExtractRoute)
 app.use("/contracts", ContractRoute)
 app.use("/abi", AbiRoute)
 app.use("/logs", LogRoute)

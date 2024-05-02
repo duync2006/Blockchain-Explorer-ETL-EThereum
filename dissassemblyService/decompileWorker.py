@@ -4,8 +4,22 @@ from eth_utils import function_signature_to_4byte_selector
 from ethereum_dasm.evmdasm import EvmCode, Contract
 import multiprocessing as mp
 import sqlalchemy
-db = sqlalchemy.create_engine('postgresql+pg8000://postgres:etl777@postgres_db:5432/etl_ethereum')
+from sqlalchemy import text
+# db = sqlalchemy.create_engine('postgresql+pg8000://postgres:etl777@postgres_db:5432/etl_ethereum')
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+database_url = os.getenv("DATABASE_URL_FOR_EXTRACT")
+rabbitmq = os.getenv("RABBITMQ")
+engine = sqlalchemy.create_engine(database_url,  echo = True, pool_recycle=3600)
+
+# query = 'SELECT * FROM contracts LIMIT 1;'  
+query = 'INSERT INTO contracts \
+        (address, bytecode, function_sighashes, is_erc20, is_erc721)\
+        VALUES (:address, :bytecode, :function_sighashes, :is_erc20, :is_erc721)\
+        ON CONFLICT (address)\
+        DO UPDATE SET function_sighashes = excluded.function_sighashes, is_erc20 = excluded.is_erc20, is_erc721 = excluded.is_erc721;'
 class ContractWrapper:
     def __init__(self, sighashes):
         self.sighashes = sighashes
@@ -67,6 +81,7 @@ def get_function_sighashes(bytecode):
       return []
 
 def decompile(ch, method, properties, body):
+    # print("Body: ", body)
     # print(f" [x] Received {body.decode()}")
     try:
       contract = json.loads(body.decode())
@@ -75,13 +90,17 @@ def decompile(ch, method, properties, body):
       contract['function_sighashes'] = function_sighashes
       contract['is_erc20'] = is_erc20_contract(function_sighashes)
       contract['is_erc721'] = is_erc721_contract(function_sighashes)
-    except:
-      pass
+      with engine.connect() as connection:
+        connection.execute(text(query), contract)
+        connection.commit()
+      print(f"Update Contract to DB Success:  {contract['address']}")
+    except Exception as e:
+      print("The error is: ",e)
     
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def consume():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(rabbitmq))
     channel = connection.channel()
 
     channel.queue_declare(queue = "dissassemble_SC", durable=True, arguments={'x-queue-mode': 'lazy'})
@@ -107,5 +126,3 @@ if(__name__) == '__main__':
     main()
     
     
-    
-# INSERT INTO contracts (address, bytecode, function_sighashes, is_erc20, is_erc721, block_number, creator) VALUES (%s::VARCHAR, %s::VARCHAR, %s::VARCHAR[], %s::BOOLEAN, %s::BOOLEAN, %s::BIGINT, %s::VARCHAR) ON CONFLICT (address) DO UPDATE SET bytecode = excluded.bytecode, function_sighashes = excluded.function_sighashes, is_erc20 = excluded.is_erc20, is_erc721 = excluded.is_erc721, block_number = excluded.block_number, creator = excluded.creator

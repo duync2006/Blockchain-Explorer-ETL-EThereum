@@ -4,3 +4,5 @@ eth_utils
 sqlalchemy
 psycopg2
 pg8000
+python-dotenv
+eth-hash[pycryptodome]

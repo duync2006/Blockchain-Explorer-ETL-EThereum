@@ -71,8 +71,14 @@ from blockchainetl.jobs.exporters.converters.unix_timestamp_item_converter impor
 from blockchainetl.jobs.exporters.converters.int_to_decimal_item_converter import IntToDecimalItemConverter
 from blockchainetl.jobs.exporters.converters.list_field_item_converter import ListFieldItemConverter
 from ethereumetl.streaming.postgres_tables import GETH_TRACES, BLOCKS, TRANSACTIONS, LOGS, TOKEN_TRANSFERS, TRACES, TOKENS, CONTRACTS
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_size):
+    print("database_url: ", os.getenv("DATABASE_URL_FOR_EXTRACT"))
+    database_url = os.getenv("DATABASE_URL_FOR_EXTRACT")
     for batch_start_block, batch_end_block, partition_dir in partitions:
         # # # start # # #
         # start_time = time()
@@ -91,7 +97,7 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
         # job.run()
 
         item_exporter_to_Postgres = PostgresItemExporter(
-    'postgresql+pg8000://postgres:etl777@localhost:5432/etl_ethereum', item_type_to_insert_stmt_mapping={
+    database_url, item_type_to_insert_stmt_mapping={
         'block': create_insert_statement_for_table(BLOCKS),
         'transaction': create_insert_statement_for_table(TRANSACTIONS),
         'log': create_insert_statement_for_table(LOGS),
