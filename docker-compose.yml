@@ -22,6 +22,11 @@ services:
     volumes:
         - C:\Users\NGUYEN CONG DUY\AppData\Roaming\RabbitMQ\db:/var/lib/rabbitmq/
         - C:\Users\NGUYEN CONG DUY\AppData\Roaming\RabbitMQ\log:/var/log/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
 
   etl-service:
     image: etl_ethereum:1.0.0
@@ -30,6 +35,7 @@ services:
       - "5000:5000"
     depends_on:
       - postgres_db
+      - rabbitmq
   explorer_service:
     image: explorer_service:1.0.0
     container_name: explorer_service
@@ -37,20 +43,24 @@ services:
       - "3000:3000"
     depends_on:
       - postgres_db
-  
+
   decode-log-service:
     image: decode_log:1.0.0
     container_name: decode-log-service
     ports:
       - "3005:3005"
     depends_on:
-      - postgres_db
- 
+      postgres_db:
+        condition: service_started  
+      rabbitmq: 
+        condition: service_healthy
   decompile-contract-service:
     image: decompile_contract:1.0.0
     container_name: decompile-contract-service
     ports:
       - "3006:3006"
     depends_on:
-      - postgres_db
-
+      postgres_db:
+        condition: service_started
+      rabbitmq: 
+        condition: service_healthy

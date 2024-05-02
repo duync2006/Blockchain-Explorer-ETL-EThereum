@@ -91,7 +91,7 @@ def export_all_common(partitions, output_dir, provider_uri, max_workers, batch_s
         # job.run()
 
         item_exporter_to_Postgres = PostgresItemExporter(
-    'postgresql+pg8000://postgres:etl777@postgres_db:5432/etl_ethereum', item_type_to_insert_stmt_mapping={
+    'postgresql+pg8000://postgres:etl777@localhost:5432/etl_ethereum', item_type_to_insert_stmt_mapping={
         'block': create_insert_statement_for_table(BLOCKS),
         'transaction': create_insert_statement_for_table(TRANSACTIONS),
         'log': create_insert_statement_for_table(LOGS),

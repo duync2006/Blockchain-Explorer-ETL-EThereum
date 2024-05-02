@@ -38,7 +38,6 @@ import time
 from ethereumetl.storageABI import eternalStorage
 import json
 w3 = Web3(Web3.HTTPProvider('https://agd-seed-1.vbchain.vn/'))
-engine = create_engine("postgresql+pg8000://postgres:billboss123@postgres_db:5432/ETL_Ethereum")
 class EthStreamerAdapter:
     def __init__(
             self,
@@ -102,7 +101,7 @@ class EthStreamerAdapter:
             receipts, logs = self._export_receipts_and_logs(transactions)
             try: 
                 # Put to Queue (RABBITMQ)
-                connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+                connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
                 channel = connection.channel()
                 channel.queue_declare(queue = "decode_log_etl", durable=True, arguments={'x-queue-mode': 'lazy'})
                 

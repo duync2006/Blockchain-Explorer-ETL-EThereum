@@ -1,4 +1,6 @@
-flask
 pika
 ethereum_dasm
 eth_utils
+sqlalchemy
+psycopg2
+pg8000

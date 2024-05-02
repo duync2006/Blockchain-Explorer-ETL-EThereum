@@ -76,7 +76,7 @@ class ExtractContractsJob(BaseJob):
        
         try: 
             # Put to Queue (RABBITMQ)
-            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
             channel = connection.channel()
             channel.queue_declare(queue = "dissassemble_SC", durable=True, arguments={'x-queue-mode': 'lazy'})
             

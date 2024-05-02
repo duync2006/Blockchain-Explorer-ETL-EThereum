@@ -1,10 +1,10 @@
 import pika
 import json
-import sys
 from eth_utils import function_signature_to_4byte_selector
 from ethereum_dasm.evmdasm import EvmCode, Contract
-
-
+import multiprocessing as mp
+import sqlalchemy
+db = sqlalchemy.create_engine('postgresql+pg8000://postgres:etl777@postgres_db:5432/etl_ethereum')
 
 class ContractWrapper:
     def __init__(self, sighashes):
@@ -75,8 +75,6 @@ def decompile(ch, method, properties, body):
       contract['function_sighashes'] = function_sighashes
       contract['is_erc20'] = is_erc20_contract(function_sighashes)
       contract['is_erc721'] = is_erc721_contract(function_sighashes)
-      print("contract: ", contract)
-
     except:
       pass
     
@@ -85,10 +83,29 @@ def decompile(ch, method, properties, body):
 def consume():
     connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
     channel = connection.channel()
-    # channel.basic_qos(prefetch_count=50)
+
     channel.queue_declare(queue = "dissassemble_SC", durable=True, arguments={'x-queue-mode': 'lazy'})
 
-    # channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='dissassemble_SC', on_message_callback=decompile)
 
     channel.start_consuming()
+
+def main():
+    process1 = mp.Process(name="Process-1", target=consume, args=())
+    process2 = mp.Process(name="Process-2", target=consume, args=())
+    process3 = mp.Process(name="Process-3", target=consume, args=())
+
+    process1.start()
+    process2.start()
+    process3.start()
+
+    process1.join()
+    process2.join()
+    process3.join()
+    
+if(__name__) == '__main__':
+    main()
+    
+    
+    
+# INSERT INTO contracts (address, bytecode, function_sighashes, is_erc20, is_erc721, block_number, creator) VALUES (%s::VARCHAR, %s::VARCHAR, %s::VARCHAR[], %s::BOOLEAN, %s::BOOLEAN, %s::BIGINT, %s::VARCHAR) ON CONFLICT (address) DO UPDATE SET bytecode = excluded.bytecode, function_sighashes = excluded.function_sighashes, is_erc20 = excluded.is_erc20, is_erc721 = excluded.is_erc721, block_number = excluded.block_number, creator = excluded.creator

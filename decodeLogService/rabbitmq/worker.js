@@ -134,17 +134,3 @@ async function decodeLogWorker(nodetype = 1, messageLimit = 50) {
 }
 
 module.exports = decodeLogWorker;
-
-// console.log('values: ', values)
-// console.log("decode data:", decodeData)
-
-// save into db
-// const query = `INSERT INTO logs (log_index, transaction_hash, decode, is_decode)\
-//              VALUES (${element.log_index}, '${element.transaction_hash}'::text,'${JSON.stringify(decodeData)}'::json,${true})\
-//              ON CONFLICT (log_index, transaction_hash) DO UPDATE SET decode = EXCLUDED.decode, is_decode = EXCLUDED.is_decode`
-
-// const query = `UPDATE logs SET decode = '${JSON.stringify(decodeData)}'::json, is_decoded = true\
-//                WHERE log_index = ${element.log_index} AND transaction_hash = '${element.transaction_hash}'::text`
-
-// await client.query(query)
-// console.log(`Decode log susscess with log_index = ${element.log_index} and hash = ${element.transaction_hash}`)

@@ -11,7 +11,7 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
     const client = await connectDB();
     const connection = await amqp.connect('amqp://rabbitmq')
     const channel = await connection.createChannel();
-    channel.assertQueue("logs_queue_lazy_db", {
+    channel.assertQueue("decode_log_db", {
       durable: true,
       queueMode: 'lazy'
     })
@@ -40,7 +40,7 @@ async function produceLog(startBlockNumber, endBlockNumber, options = 0) {
       temp[logs] = groupedObject[logs];
       console.log('buffer: ', Buffer.from(JSON.stringify(temp)))
       // for (let i = 0; i <= 30; i++)
-      channel.sendToQueue('logs_queue_lazy_db', Buffer.from(JSON.stringify(temp)), {persistent: true})
+      channel.sendToQueue('decode_log_db', Buffer.from(JSON.stringify(temp)), {persistent: true})
       temp = {};
       console.log(" [x] Sent '%s'", logs);
     }

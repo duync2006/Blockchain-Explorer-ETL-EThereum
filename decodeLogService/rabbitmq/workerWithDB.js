@@ -3,7 +3,7 @@ const contractAddress = require('../Service/contract_address.json')
 const abi = require('../Service/abi.json')
 const connectDB = require('../Service/dbConfig')
 var amqp = require('amqplib');
-var queue = 'logs_queue_lazy_db';
+var queue = 'decode_log_db';
 
 async function decodeLogWorker(nodetype = 1, messageLimit = 50) {
   const client = await connectDB();
