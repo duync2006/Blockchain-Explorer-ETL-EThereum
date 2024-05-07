@@ -45,7 +45,7 @@ docker build -t decompile_contract:1.0.0 .
 
 Build ETL Service
 ```bash
-cd .\dissassamblyService
+cd .\ethereum-etl\
 docker build -t etl_ethereum:1.0.0
 ```
 Build Explorer Service
