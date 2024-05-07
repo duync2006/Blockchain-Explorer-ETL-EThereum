@@ -27,11 +27,11 @@ DATABASE_URL_FOR_EXTRACT = 'postgresql+pg8000://[user[:password]@][netloc][:port
 ## docker
 Build images: 
 ```bash
-docker build -t decode_log:1.0.0 .\database\
-docker build -t decode_log:1.0.0 .\decodeLogService\
-docker build -t decompile_contract:1.0.0 .\dissassemblyService\
-docker build -t etl_ethereum:1.0.0 .\ethereum-etl\
-docker build -t explorer_service:1.0.0 .\postgreQuery\
+docker build -t postgres:2.0.0 .\database\.
+docker build -t decode_log:1.0.0 .\decodeLogService\.
+docker build -t decompile_contract:1.0.0 .\dissassemblyService\.
+docker build -t etl_ethereum:1.0.0 .\ethereum-etl\.
+docker build -t explorer_service:1.0.0 .\postgreQuery\.
 
 ```
 
