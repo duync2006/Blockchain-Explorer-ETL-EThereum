@@ -6,6 +6,20 @@
 -- Dumped by pg_dump version 16.1
 
 -- Started on 2024-05-02 16:51:43
+-- Database: etl_ethereum
+
+-- DROP DATABASE IF EXISTS etl_ethereum;
+
+-- CREATE DATABASE etl_ethereum
+--     WITH
+--     OWNER = postgres
+--     ENCODING = 'UTF8'
+--     LC_COLLATE = 'en_US.utf8'
+--     LC_CTYPE = 'en_US.utf8'
+--     LOCALE_PROVIDER = 'libc'
+--     TABLESPACE = pg_default
+--     CONNECTION LIMIT = -1
+--     IS_TEMPLATE = False;
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -567,7 +581,7 @@ CREATE INDEX transactions_to_block_number_index ON public.transactions USING btr
 -- Name: transactions delete_transactions_statistic_one_month; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER delete_transactions_statistic_one_month AFTER INSERT ON public.transactions FOR EACH STATEMENT EXECUTE FUNCTION public.delete_transactions_statistic_one_month();
+-- CREATE TRIGGER delete_transactions_statistic_one_month AFTER INSERT ON public.transactions FOR EACH STATEMENT EXECUTE FUNCTION public.delete_transactions_statistic_one_month();
 
 
 --
@@ -575,7 +589,7 @@ CREATE TRIGGER delete_transactions_statistic_one_month AFTER INSERT ON public.tr
 -- Name: transactions update_transactions_statistic; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER update_transactions_statistic AFTER INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.update_transaction_statistic();
+-- CREATE TRIGGER update_transactions_statistic AFTER INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.update_transaction_statistic();
 
 
 --
@@ -583,7 +597,7 @@ CREATE TRIGGER update_transactions_statistic AFTER INSERT ON public.transactions
 -- Name: transactions update_transactions_statistic_one_month; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
-CREATE TRIGGER update_transactions_statistic_one_month AFTER INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.update_transactions_statistic_one_month();
+-- CREATE TRIGGER update_transactions_statistic_one_month AFTER INSERT ON public.transactions FOR EACH ROW EXECUTE FUNCTION public.update_transactions_statistic_one_month();
 
 
 -- Completed on 2024-05-02 16:51:43

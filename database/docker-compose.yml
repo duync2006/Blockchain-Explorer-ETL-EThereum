@@ -1,0 +1,12 @@
+# version: '3'
+
+# services:
+#   postgres_db: 
+#     image: postgres_db_test_schema:latest
+#     container_name: postgres_testing
+#     environment:
+#       - POSTGRES_PASSWORD=123
+#       - POSTGRES_USER=postgres
+#       - POSTGRES_DB=etl_ethereum
+#     ports:
+#       - "5432:5432"
