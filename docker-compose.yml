@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+  # Uncomment this when you want to save data to your local disk
   # postgres_db: 
   #   image: postgres:latest
   #   container_name: postgres_db
@@ -13,6 +14,7 @@ services:
   #   volumes:
   #     - C:\postgresLocalStorage:/var/lib/postgresql/data
 
+  # Comment this postgres_db below when you run postgres_db above
   postgres_db: 
     image: postgres:2.0.0
     container_name: postgres_db
