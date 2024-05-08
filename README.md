@@ -5,13 +5,6 @@ An application used to extracting blockchain data with both GETH and PARITY node
 
 ## Clone Source Code
 - Clone down this repository via this link: _https://github.com/duync2006/Blockchain-Explorer-ETL-EThereum.git
-  
-## Install node package 
-```bash
-> cd .\postgreQuery\
-> npm install
-```
-
 
 ## docker
 Windows: 
