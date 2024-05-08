@@ -1,5 +1,5 @@
-# Vibi ETL Ethereum
-An application used to extracting blockchain data with both GETH and PARITY node.
+# VBChain-Block-Explorer
+An application used to extracting blockchain data with both GETH and PARITY node for VBChain Blockchain.
 
 # How to run
 
